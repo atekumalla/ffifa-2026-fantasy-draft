@@ -91,8 +91,21 @@ table{border-collapse:collapse;width:100%}
 .recent-table .score-cell{font-family:var(--font-display);font-weight:700}
 .footer{text-align:center;padding:var(--space-8) var(--space-4);color:var(--color-text-faint);font-size:var(--text-xs)}
 .footer a{color:var(--color-primary);text-decoration:none}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal-content{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-xl);padding:var(--space-6);max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:var(--shadow-lg);position:relative}
+.modal-header{font-family:var(--font-display);font-size:var(--text-xl);font-weight:800;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2);color:var(--color-primary)}
+.modal-close{position:absolute;top:var(--space-4);right:var(--space-4);width:32px;height:32px;border-radius:var(--radius-md);background:var(--color-surface-offset);color:var(--color-text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition)}
+.modal-close:hover{background:var(--color-surface-dynamic);color:var(--color-text)}
+.rules-table{width:100%;margin:var(--space-4) 0;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden}
+.rules-table th{background:var(--color-surface-2);padding:var(--space-3);text-align:left;font-family:var(--font-display);font-size:var(--text-sm);font-weight:700;border-bottom:2px solid var(--color-border)}
+.rules-table td{padding:var(--space-3);border-bottom:1px solid var(--color-divider);font-size:var(--text-sm)}
+.rules-table tbody tr:last-child td{border-bottom:none}
+.rules-table tbody tr:hover{background:var(--color-surface-2)}
+.rules-note{background:var(--color-surface-2);padding:var(--space-4);border-radius:var(--radius-md);margin-top:var(--space-4);font-size:var(--text-sm);line-height:1.6}
+.rules-note strong{color:var(--color-primary)}
 @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
-@media(max-width:600px){.main{padding:var(--space-4);gap:var(--space-4)}.kpi-grid{grid-template-columns:1fr 1fr}.header{padding:var(--space-3) var(--space-4);flex-wrap:wrap;gap:var(--space-2)}.header-actions{width:100%;justify-content:flex-end}.leader-banner{padding:var(--space-4)}.leader-name{font-size:var(--text-lg)}}
+@media(max-width:600px){.main{padding:var(--space-4);gap:var(--space-4)}.kpi-grid{grid-template-columns:1fr 1fr}.header{padding:var(--space-3) var(--space-4);flex-wrap:wrap;gap:var(--space-2)}.header-actions{width:100%;justify-content:flex-end}.leader-banner{padding:var(--space-4)}.leader-name{font-size:var(--text-lg)}.modal-content{padding:var(--space-4);width:95%}}
 </style>
 </head>
 <body>
@@ -108,6 +121,7 @@ table{border-collapse:collapse;width:100%}
     <div class="sync-status" id="syncStatus">Last sync: —</div>
     <button class="btn btn-primary" id="btnSync"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sync</button>
     <button class="btn btn-secondary" id="btnValidate"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Validate</button>
+    <button class="btn btn-secondary" id="btnRules"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Rules</button>
     <button class="btn btn-share" id="btnShare"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.13.558 4.13 1.534 5.863L0 24l6.29-1.498A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-1.94 0-3.79-.5-5.4-1.41l-.39-.23-3.73.89.93-3.61-.26-.4A9.72 9.72 0 0 1 2.25 12c0-5.385 4.365-9.75 9.75-9.75S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg> Share</button>
     <a class="btn btn-secondary" id="btnSheet" href="#" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Sheet</a>
     <button class="btn-icon" id="themeToggle" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
@@ -155,6 +169,57 @@ table{border-collapse:collapse;width:100%}
 </main>
 <footer class="footer">FIFA 2026 Fantasy Draft &middot; Pakodis League &middot; <a href="#" id="footerSheetLink" target="_blank">Open Spreadsheet</a></footer>
 <div class="toast" id="toast"></div>
+
+<!-- Rules Modal -->
+<div class="modal-overlay" id="rulesModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="document.getElementById('rulesModal').classList.remove('show')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      Scoring Rules
+    </div>
+    <div style="color:var(--color-text-muted);font-size:var(--text-sm);margin-bottom:var(--space-4)">
+      Points are awarded based on match results and goals scored/conceded.
+    </div>
+    <table class="rules-table">
+      <thead>
+        <tr>
+          <th>Event</th>
+          <th style="text-align:center">Group Stage</th>
+          <th style="text-align:center">Knockout</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Win</strong></td>
+          <td style="text-align:center">3 pts</td>
+          <td style="text-align:center">3 pts</td>
+        </tr>
+        <tr>
+          <td><strong>Draw</strong></td>
+          <td style="text-align:center">1.5 pts</td>
+          <td style="text-align:center">1.5 pts</td>
+        </tr>
+        <tr>
+          <td><strong>Goal Scored</strong></td>
+          <td style="text-align:center">0.5 pts</td>
+          <td style="text-align:center">0.75 pts</td>
+        </tr>
+        <tr>
+          <td><strong>Goal Conceded</strong></td>
+          <td style="text-align:center">-0.25 pts</td>
+          <td style="text-align:center">-0.25 pts</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="rules-note">
+      <strong>⚠️ Important:</strong> Penalty shootout goals do <strong>not</strong> count towards scoring. Only goals scored during regular time and extra time are included in the point calculations.
+    </div>
+  </div>
+</div>
+
 <script>
 const PLAYER_COLORS = ['#d97706','#2563eb','#dc2626','#7c3aed'];
 const RANK_CLASSES = ['rank-1','rank-2','rank-3','rank-4'];
@@ -372,6 +437,16 @@ document.getElementById('themeToggle').addEventListener('click', function() {
   var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
   html.setAttribute('data-theme', next);
   loadData();
+});
+
+document.getElementById('btnRules').addEventListener('click', function() {
+  document.getElementById('rulesModal').classList.add('show');
+});
+
+document.getElementById('rulesModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    this.classList.remove('show');
+  }
 });
 
 function showToast(msg) {
