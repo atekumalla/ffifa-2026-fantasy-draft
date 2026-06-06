@@ -1,0 +1,22 @@
+{
+  "scoring_rules": {
+    "group_stage": {
+      "win": 3.0,
+      "draw": 1.5,
+      "goal_scored": 0.5,
+      "goal_conceded": -0.25
+    },
+    "knockout": {
+      "win": 3.0,
+      "draw": 1.5,
+      "goal_scored": 0.75,
+      "goal_conceded": -0.25
+    },
+    "notes": [
+      "Penalty shootout goals do NOT count for scoring",
+      "Only regular time + extra time goals count",
+      "A team that wins on penalties gets Draw points (1.5) not Win points",
+      "Goals in extra time count at the knockout rate (0.75)"
+    ]
+  }
+}

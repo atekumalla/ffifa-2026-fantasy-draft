@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIFA 2026 Fantasy Draft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300..700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root,[data-theme="light"]{--color-bg:#f0f2f5;--color-surface:#fff;--color-surface-2:#f7f8fa;--color-surface-offset:#eceef1;--color-surface-dynamic:#e2e4e9;--color-divider:#d8dbe1;--color-border:#ced1d9;--color-text:#111827;--color-text-muted:#6b7280;--color-text-faint:#9ca3af;--color-primary:#16a34a;--color-primary-hover:#15803d;--color-primary-highlight:#dcfce7;--color-gold:#d97706;--color-gold-light:#fef3c7;--color-blue:#2563eb;--color-blue-light:#dbeafe;--color-error:#dc2626;--color-error-light:#fee2e2;--color-purple:#7c3aed;--color-purple-light:#ede9fe;--shadow-sm:0 1px 2px rgba(0,0,0,.06);--shadow-md:0 4px 12px rgba(0,0,0,.08);--shadow-lg:0 12px 32px rgba(0,0,0,.12);--radius-sm:.375rem;--radius-md:.5rem;--radius-lg:.75rem;--radius-xl:1rem;--radius-full:9999px;--font-display:'Barlow Condensed',Arial Narrow,sans-serif;--font-body:'Barlow',system-ui,sans-serif;--text-xs:clamp(.75rem,.7rem + .25vw,.875rem);--text-sm:clamp(.875rem,.8rem + .35vw,1rem);--text-base:clamp(1rem,.95rem + .25vw,1.125rem);--text-lg:clamp(1.125rem,1rem + .75vw,1.5rem);--text-xl:clamp(1.5rem,1.2rem + 1.25vw,2.25rem);--text-2xl:clamp(2rem,1.2rem + 2.5vw,3.5rem);--space-1:.25rem;--space-2:.5rem;--space-3:.75rem;--space-4:1rem;--space-5:1.25rem;--space-6:1.5rem;--space-8:2rem;--transition:180ms cubic-bezier(.16,1,.3,1)}
+[data-theme="dark"]{--color-bg:#0d1117;--color-surface:#161b22;--color-surface-2:#1c2128;--color-surface-offset:#1a2030;--color-surface-dynamic:#252d3a;--color-divider:#21262d;--color-border:#30363d;--color-text:#e6edf3;--color-text-muted:#8b949e;--color-text-faint:#4d5566;--color-primary:#22c55e;--color-primary-hover:#16a34a;--color-primary-highlight:#14532d;--color-gold:#f59e0b;--color-gold-light:#451a03;--color-blue:#3b82f6;--color-blue-light:#1e3a5f;--color-error:#f87171;--color-error-light:#450a0a;--color-purple:#a78bfa;--color-purple-light:#2e1065;--shadow-sm:0 1px 2px rgba(0,0,0,.3);--shadow-md:0 4px 12px rgba(0,0,0,.4);--shadow-lg:0 12px 32px rgba(0,0,0,.5)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+body{min-height:100dvh;font-family:var(--font-body);font-size:var(--text-base);color:var(--color-text);background:var(--color-bg);line-height:1.5}
+button{cursor:pointer;background:none;border:none;font:inherit;color:inherit}
+table{border-collapse:collapse;width:100%}
+.header{background:var(--color-surface);border-bottom:1px solid var(--color-border);padding:var(--space-3) var(--space-6);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm)}
+.header-brand{display:flex;align-items:center;gap:var(--space-3)}
+.header-logo svg{width:32px;height:32px}
+.header-title{font-family:var(--font-display);font-size:var(--text-lg);font-weight:800;letter-spacing:.02em;line-height:1}
+.header-subtitle{font-size:var(--text-xs);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.08em}
+.header-actions{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);font-family:var(--font-display);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.05em;transition:all var(--transition);white-space:nowrap;text-decoration:none}
+.btn svg{width:14px;height:14px}
+.btn-primary{background:var(--color-primary);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--color-primary-hover);transform:translateY(-1px)}
+.btn-secondary{background:var(--color-surface-offset);color:var(--color-text);border:1px solid var(--color-border)}
+.btn-secondary:hover:not(:disabled){background:var(--color-surface-dynamic)}
+.btn-share{background:#25D366;color:#fff}
+.btn-share:hover:not(:disabled){background:#1da851}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-icon{width:34px;height:34px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-md);background:var(--color-surface-offset);color:var(--color-text-muted)}
+.btn-icon:hover{background:var(--color-surface-dynamic);color:var(--color-text)}
+.sync-status{font-size:var(--text-xs);color:var(--color-text-muted);text-align:right}
+.sync-status strong{color:var(--color-primary)}
+.toast{position:fixed;bottom:var(--space-6);left:50%;transform:translateX(-50%) translateY(100px);background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-5);box-shadow:var(--shadow-lg);font-size:var(--text-sm);font-weight:600;z-index:1000;transition:transform .3s ease;display:flex;align-items:center;gap:var(--space-2)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.main{max-width:1280px;margin:0 auto;padding:var(--space-6);display:flex;flex-direction:column;gap:var(--space-6)}
+.leader-banner{background:linear-gradient(135deg,var(--color-primary) 0%,#059669 60%,#0d9488 100%);border-radius:var(--radius-xl);padding:var(--space-5) var(--space-8);display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);position:relative;overflow:hidden}
+.leader-banner::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.06)}
+.leader-info{display:flex;align-items:center;gap:var(--space-4);position:relative;z-index:1}
+.leader-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:#fff;border:3px solid rgba(255,255,255,.3)}
+.leader-label{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:rgba(255,255,255,.7);font-family:var(--font-display)}
+.leader-name{font-family:var(--font-display);font-size:var(--text-xl);font-weight:800;color:#fff;line-height:1;margin-top:var(--space-1)}
+.leader-pts{font-size:var(--text-xs);color:rgba(255,255,255,.7);margin-top:var(--space-1)}
+.leader-pts strong{color:#fff}
+.trophy-icon{font-size:2.5rem;position:relative;z-index:1}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-4)}
+.kpi-card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm);transition:box-shadow var(--transition)}
+.kpi-card:hover{box-shadow:var(--shadow-md)}
+.kpi-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--space-2)}
+.kpi-rank{font-family:var(--font-display);font-size:var(--text-xs);font-weight:700;padding:2px var(--space-2);border-radius:var(--radius-sm)}
+.rank-1{background:var(--color-gold-light);color:var(--color-gold)}.rank-2{background:var(--color-surface-offset);color:var(--color-text-muted)}.rank-3{background:var(--color-error-light);color:var(--color-error)}.rank-4{background:var(--color-purple-light);color:var(--color-purple)}
+.kpi-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1rem;font-weight:800}
+.kpi-player-name{font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;line-height:1.1}
+.kpi-score{font-family:var(--font-display);font-size:var(--text-2xl);font-weight:800;line-height:1;margin:var(--space-2) 0;font-variant-numeric:tabular-nums}
+.kpi-teams{display:flex;flex-direction:column;gap:3px;margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--color-divider)}
+.team-chip{font-size:var(--text-xs);background:var(--color-surface-offset);padding:2px var(--space-2);border-radius:var(--radius-sm);white-space:nowrap}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6)}
+.card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow-sm)}
+.section-title{font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
+.section-title svg{width:20px;height:20px;color:var(--color-text-muted)}
+.chart-container{position:relative;height:280px}
+.pts-table thead th{font-family:var(--font-display);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-muted);padding:var(--space-2) var(--space-3);border-bottom:2px solid var(--color-divider);text-align:center}
+.pts-table thead th:nth-child(2){text-align:left}
+.pts-table tbody td{padding:var(--space-3);border-bottom:1px solid var(--color-divider);text-align:center;font-variant-numeric:tabular-nums;font-size:var(--text-sm)}
+.pts-table tbody tr:last-child td{border-bottom:none}
+.pts-table tbody tr:hover{background:var(--color-surface-2)}
+.pts-table .player-cell{display:flex;align-items:center;gap:var(--space-2);text-align:left}
+.pts-table .mini-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:.8rem;font-weight:800;flex-shrink:0}
+.pts-table .total-col{font-family:var(--font-display);font-size:var(--text-base);font-weight:800}
+.pts-bar-cell{display:flex;align-items:center;gap:var(--space-2)}
+.pts-bar{height:6px;border-radius:var(--radius-full);flex-grow:1;background:var(--color-surface-offset);overflow:hidden}
+.pts-bar-fill{height:100%;border-radius:var(--radius-full);transition:width .6s ease}
+.match-card{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:var(--space-3) var(--space-4);border-left:3px solid var(--color-primary)}
+.match-card+.match-card{margin-top:var(--space-3)}
+.match-meta{display:flex;justify-content:space-between;font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-2)}
+.match-teams{display:flex;align-items:center;justify-content:space-between}
+.match-team{font-family:var(--font-display);font-weight:700;font-size:var(--text-sm);display:flex;align-items:center;gap:var(--space-1)}
+.match-score{font-family:var(--font-display);font-size:var(--text-lg);font-weight:800;min-width:60px;text-align:center}
+.match-score.tbd{color:var(--color-text-muted);font-size:var(--text-sm)}
+.recent-table thead th{font-family:var(--font-display);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;color:var(--color-text-muted);padding:var(--space-2) var(--space-3);border-bottom:2px solid var(--color-divider);text-align:center}
+.recent-table thead th:first-child{text-align:left}
+.recent-table tbody td{padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--color-divider);font-size:var(--text-sm);text-align:center;font-variant-numeric:tabular-nums}
+.recent-table tbody td:first-child{text-align:left}
+.recent-table tbody tr:last-child td{border-bottom:none}
+.recent-table .pts-pos{color:var(--color-primary);font-weight:700;font-family:var(--font-display)}
+.recent-table .pts-zero{color:var(--color-text-faint)}
+.recent-table .score-cell{font-family:var(--font-display);font-weight:700}
+.footer{text-align:center;padding:var(--space-8) var(--space-4);color:var(--color-text-faint);font-size:var(--text-xs)}
+.footer a{color:var(--color-primary);text-decoration:none}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
+@media(max-width:600px){.main{padding:var(--space-4);gap:var(--space-4)}.kpi-grid{grid-template-columns:1fr 1fr}.header{padding:var(--space-3) var(--space-4);flex-wrap:wrap;gap:var(--space-2)}.header-actions{width:100%;justify-content:flex-end}.leader-banner{padding:var(--space-4)}.leader-name{font-size:var(--text-lg)}}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="header-brand">
+    <div class="header-logo"><svg viewBox="0 0 36 36" fill="none"><circle cx="18" cy="18" r="17" fill="#16a34a"/><polygon points="18,6 21,14 30,14 23,19 26,27 18,22 10,27 13,19 6,14 15,14" fill="white" opacity=".95"/><circle cx="18" cy="18" r="4" fill="#16a34a"/></svg></div>
+    <div>
+      <div class="header-title">FIFA 2026 Fantasy Draft</div>
+      <div class="header-subtitle" id="headerSubtitle">Loading...</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="sync-status" id="syncStatus">Last sync: —</div>
+    <button class="btn btn-primary" id="btnSync"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sync</button>
+    <button class="btn btn-secondary" id="btnValidate"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Validate</button>
+    <button class="btn btn-share" id="btnShare"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.13.558 4.13 1.534 5.863L0 24l6.29-1.498A11.94 11.94 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-1.94 0-3.79-.5-5.4-1.41l-.39-.23-3.73.89.93-3.61-.26-.4A9.72 9.72 0 0 1 2.25 12c0-5.385 4.365-9.75 9.75-9.75S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg> Share</button>
+    <a class="btn btn-secondary" id="btnSheet" href="#" target="_blank"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> Sheet</a>
+    <button class="btn-icon" id="themeToggle" aria-label="Toggle theme"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+  </div>
+</header>
+<main class="main">
+  <div id="demoBanner" style="display:none;background:linear-gradient(90deg,#7c3aed,#6366f1);border-radius:var(--radius-lg);padding:var(--space-3) var(--space-5);color:#fff;font-family:var(--font-display);font-size:var(--text-sm);font-weight:600;align-items:center;gap:var(--space-3)">
+    <span style="font-size:1.3rem">🎮</span>
+    <span>DEMO MODE — Playing with generated data. Hit <strong>Sync</strong> to reveal the next match result!</span>
+    <span id="demoPending" style="margin-left:auto;opacity:.8;font-size:var(--text-xs)"></span>
+  </div>
+  <div class="leader-banner">
+    <div class="leader-info">
+      <div class="leader-avatar" id="leaderAvatar">?</div>
+      <div>
+        <div class="leader-label">🏆 Current Leader</div>
+        <div class="leader-name" id="leaderName">Loading...</div>
+        <div class="leader-pts" id="leaderPts"></div>
+      </div>
+    </div>
+    <div class="trophy-icon">🏆</div>
+  </div>
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div class="two-col">
+    <div class="card">
+      <div class="section-title"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg> Points Table</div>
+      <div style="overflow-x:auto"><table class="pts-table" id="pointsTable"><thead><tr><th>#</th><th>Player</th><th>Total</th><th>Gap</th></tr></thead><tbody></tbody></table></div>
+      <div id="barVis" style="margin-top:var(--space-4);display:flex;flex-direction:column;gap:var(--space-2)"></div>
+    </div>
+    <div class="card">
+      <div class="section-title"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> Score Worm</div>
+      <div class="chart-container"><canvas id="wormChart"></canvas></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="section-title"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Recent Results</div>
+      <div style="overflow-x:auto"><table class="recent-table" id="recentTable"><thead><tr><th>Match</th><th>Score</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="section-title"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Upcoming Matches</div>
+      <div id="upcomingList"></div>
+    </div>
+  </div>
+</main>
+<footer class="footer">FIFA 2026 Fantasy Draft &middot; Pakodis League &middot; <a href="#" id="footerSheetLink" target="_blank">Open Spreadsheet</a></footer>
+<div class="toast" id="toast"></div>
+<script>
+const PLAYER_COLORS = ['#d97706','#2563eb','#dc2626','#7c3aed'];
+const RANK_CLASSES = ['rank-1','rank-2','rank-3','rank-4'];
+const RANK_LABELS = ['\u{1F947} 1st','\u{1F948} 2nd','\u{1F949} 3rd','4th'];
+
+const FLAGS = {"Argentina":"\u{1F1E6}\u{1F1F7}","Australia":"\u{1F1E6}\u{1F1FA}","Austria":"\u{1F1E6}\u{1F1F9}","Algeria":"\u{1F1E9}\u{1F1FF}","Belgium":"\u{1F1E7}\u{1F1EA}","Bosnia & Herzegovina":"\u{1F1E7}\u{1F1E6}","Brazil":"\u{1F1E7}\u{1F1F7}","Cameroon":"\u{1F1E8}\u{1F1F2}","Canada":"\u{1F1E8}\u{1F1E6}","Chile":"\u{1F1E8}\u{1F1F1}","Colombia":"\u{1F1E8}\u{1F1F4}","Congo":"\u{1F1E8}\u{1F1EC}","Croatia":"\u{1F1ED}\u{1F1F7}","Czechia":"\u{1F1E8}\u{1F1FF}","Denmark":"\u{1F1E9}\u{1F1F0}","Ecuador":"\u{1F1EA}\u{1F1E8}","Egypt":"\u{1F1EA}\u{1F1EC}","England":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}","France":"\u{1F1EB}\u{1F1F7}","Germany":"\u{1F1E9}\u{1F1EA}","Ghana":"\u{1F1EC}\u{1F1ED}","Iran":"\u{1F1EE}\u{1F1F7}","Ivory Coast":"\u{1F1E8}\u{1F1EE}","Jamaica":"\u{1F1EF}\u{1F1F2}","Japan":"\u{1F1EF}\u{1F1F5}","Mexico":"\u{1F1F2}\u{1F1FD}","Morocco":"\u{1F1F2}\u{1F1E6}","Netherlands":"\u{1F1F3}\u{1F1F1}","New Zealand":"\u{1F1F3}\u{1F1FF}","Nigeria":"\u{1F1F3}\u{1F1EC}","Norway":"\u{1F1F3}\u{1F1F4}","Paraguay":"\u{1F1F5}\u{1F1FE}","Peru":"\u{1F1F5}\u{1F1EA}","Portugal":"\u{1F1F5}\u{1F1F9}","Qatar":"\u{1F1F6}\u{1F1E6}","Saudi Arabia":"\u{1F1F8}\u{1F1E6}","Scotland":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}","Senegal":"\u{1F1F8}\u{1F1F3}","Serbia":"\u{1F1F7}\u{1F1F8}","South Africa":"\u{1F1FF}\u{1F1E6}","South Korea":"\u{1F1F0}\u{1F1F7}","Spain":"\u{1F1EA}\u{1F1F8}","Sweden":"\u{1F1F8}\u{1F1EA}","Switzerland":"\u{1F1E8}\u{1F1ED}","Tunisia":"\u{1F1F9}\u{1F1F3}","Turkey":"\u{1F1F9}\u{1F1F7}","Uruguay":"\u{1F1FA}\u{1F1FE}","USA":"\u{1F1FA}\u{1F1F8}"};
+const ABBREV = {"Argentina":"ARG","Australia":"AUS","Austria":"AUT","Algeria":"ALG","Belgium":"BEL","Bosnia & Herzegovina":"BIH","Brazil":"BRA","Cameroon":"CMR","Canada":"CAN","Chile":"CHI","Colombia":"COL","Congo":"CGO","Croatia":"CRO","Czechia":"CZE","Denmark":"DEN","Ecuador":"ECU","Egypt":"EGY","England":"ENG","France":"FRA","Germany":"GER","Ghana":"GHA","Iran":"IRN","Ivory Coast":"CIV","Jamaica":"JAM","Japan":"JPN","Mexico":"MEX","Morocco":"MAR","Netherlands":"NED","New Zealand":"NZL","Nigeria":"NGA","Norway":"NOR","Paraguay":"PAR","Peru":"PER","Portugal":"POR","Qatar":"QAT","Saudi Arabia":"KSA","Scotland":"SCO","Senegal":"SEN","Serbia":"SRB","South Africa":"RSA","South Korea":"KOR","Spain":"ESP","Sweden":"SWE","Switzerland":"SUI","Tunisia":"TUN","Turkey":"TUR","Uruguay":"URU","USA":"USA"};
+function flag(team) { return FLAGS[team] || '\u{1F3F3}\u{FE0F}'; }
+function abbr(team) { return ABBREV[team] || team.substring(0,3).toUpperCase(); }
+
+let wormChart = null;
+
+async function loadData() {
+  try {
+    const res = await fetch('/api/status');
+    if (!res.ok) throw new Error('Failed to load');
+    const data = await res.json();
+    renderDashboard(data);
+  } catch (e) {
+    console.error(e);
+    document.getElementById('headerSubtitle').textContent = 'Error loading data';
+  }
+}
+
+function renderDashboard(data) {
+  const { leaderboard, recent_matches, upcoming_matches, worm_data, last_sync,
+          total_matches, matches_played, spreadsheet_url, sync_available,
+          sync_wait_seconds, validate_available, validate_wait_seconds } = data;
+
+  // Demo banner
+  const demoBanner = document.getElementById('demoBanner');
+  if (data.demo_mode) {
+    demoBanner.style.display = 'flex';
+    document.getElementById('demoPending').textContent = (data.pending_matches || 0) + ' matches in queue';
+    document.getElementById('btnSheet').style.display = 'none';
+    document.getElementById('btnSync').disabled = false;
+  } else {
+    demoBanner.style.display = 'none';
+  }
+
+  // Header
+  document.getElementById('headerSubtitle').textContent = matches_played + ' of ' + total_matches + ' matches played';
+  document.getElementById('syncStatus').innerHTML = last_sync
+    ? 'Last sync: <strong>' + new Date(last_sync).toLocaleString() + '</strong>'
+    : 'Last sync: <strong>Never</strong>';
+  document.getElementById('btnSheet').href = spreadsheet_url;
+  document.getElementById('footerSheetLink').href = spreadsheet_url;
+  if (!data.demo_mode) document.getElementById('btnSync').disabled = !sync_available;
+  document.getElementById('btnValidate').disabled = !validate_available;
+
+  // Leader banner
+  if (leaderboard.length > 0) {
+    var leader = leaderboard[0];
+    var gap = leaderboard.length > 1 ? (leader.total_points - leaderboard[1].total_points).toFixed(1) : 0;
+    document.getElementById('leaderAvatar').textContent = leader.name[0];
+    document.getElementById('leaderName').textContent = leader.name;
+    document.getElementById('leaderPts').innerHTML = '<strong>' + leader.total_points + ' pts</strong> \u00B7 ' + gap + ' pts ahead';
+  }
+
+  // KPI Cards with flag emojis
+  var kpiGrid = document.getElementById('kpiGrid');
+  kpiGrid.innerHTML = '';
+  leaderboard.forEach(function(p, i) {
+    var color = PLAYER_COLORS[i] || PLAYER_COLORS[3];
+    var teamsHtml = p.teams.map(function(t) {
+      return '<span class="team-chip">' + flag(t.team) + ' ' + t.team + ' (' + t.points + ')</span>';
+    }).join('');
+    kpiGrid.innerHTML += '<div class="kpi-card"><div class="kpi-header"><span class="kpi-rank ' + (RANK_CLASSES[i] || 'rank-4') + '">' + (RANK_LABELS[i] || (i+1)+'th') + '</span><div class="kpi-avatar" style="background:' + color + '22;color:' + color + '">' + p.name[0] + '</div></div><div class="kpi-player-name">' + p.name + '</div><div class="kpi-score" style="color:' + color + '">' + p.total_points + '</div><div class="kpi-teams">' + teamsHtml + '</div></div>';
+  });
+
+  // Points Table
+  var tbody = document.querySelector('#pointsTable tbody');
+  tbody.innerHTML = '';
+  var maxPts = leaderboard[0] ? leaderboard[0].total_points : 1;
+  leaderboard.forEach(function(p, i) {
+    var color = PLAYER_COLORS[i] || PLAYER_COLORS[3];
+    var g = i === 0 ? '\u2014' : (p.total_points - leaderboard[0].total_points).toFixed(1);
+    tbody.innerHTML += '<tr><td style="font-family:var(--font-display);font-weight:700;color:var(--color-text-muted)">' + (i+1) + '</td><td><div class="player-cell"><div class="mini-avatar" style="background:' + color + '22;color:' + color + '">' + p.name[0] + '</div><span style="font-weight:600">' + p.name + '</span></div></td><td class="total-col" style="color:' + color + '">' + p.total_points + '</td><td style="color:' + (i===0?'var(--color-text-muted)':'var(--color-error)') + ';font-weight:700">' + g + '</td></tr>';
+  });
+
+  // Bar vis
+  var barVis = document.getElementById('barVis');
+  barVis.innerHTML = '';
+  leaderboard.forEach(function(p, i) {
+    var color = PLAYER_COLORS[i] || PLAYER_COLORS[3];
+    var pct = maxPts > 0 ? (p.total_points / maxPts * 100) : 0;
+    barVis.innerHTML += '<div class="pts-bar-cell"><span style="width:70px;font-size:var(--text-xs);color:var(--color-text-muted);font-family:var(--font-display);font-weight:700">' + p.name.toUpperCase() + '</span><div class="pts-bar"><div class="pts-bar-fill" style="width:' + pct + '%;background:' + color + '"></div></div><span style="font-family:var(--font-display);font-weight:800;font-size:var(--text-sm);width:40px;text-align:right">' + p.total_points + '</span></div>';
+  });
+
+  // Recent Results with per-player points columns
+  var orderedPlayers = leaderboard.map(function(p) { return p.name; });
+  var recentHead = document.querySelector('#recentTable thead tr');
+  var headerHtml = '<th>Match</th><th>Score</th>';
+  orderedPlayers.forEach(function(name, i) {
+    var color = PLAYER_COLORS[i] || PLAYER_COLORS[3];
+    headerHtml += '<th style="color:' + color + '">' + name[0] + '</th>';
+  });
+  recentHead.innerHTML = headerHtml;
+
+  var recentTbody = document.querySelector('#recentTable tbody');
+  recentTbody.innerHTML = '';
+  if (recent_matches.length === 0) {
+    recentTbody.innerHTML = '<tr><td colspan="' + (2 + orderedPlayers.length) + '" style="text-align:center;color:var(--color-text-muted)">No matches played yet</td></tr>';
+  } else {
+    recent_matches.forEach(function(m) {
+      var row = '<td>' + flag(m.home_team) + ' ' + abbr(m.home_team) + ' vs ' + flag(m.away_team) + ' ' + abbr(m.away_team) + '</td>';
+      row += '<td class="score-cell">' + m.home_goals + ' \u2013 ' + m.away_goals + '</td>';
+      orderedPlayers.forEach(function(name) {
+        var pp = m.player_points ? m.player_points[name] : null;
+        if (pp && pp > 0) {
+          row += '<td class="pts-pos">+' + pp + '</td>';
+        } else {
+          row += '<td class="pts-zero">\u2014</td>';
+        }
+      });
+      recentTbody.innerHTML += '<tr>' + row + '</tr>';
+    });
+  }
+
+  // Upcoming matches with flags, group, and date
+  var upList = document.getElementById('upcomingList');
+  upList.innerHTML = '';
+  if (upcoming_matches.length === 0) {
+    upList.innerHTML = '<p style="color:var(--color-text-muted)">No upcoming matches</p>';
+  } else {
+    upcoming_matches.forEach(function(m) {
+      var dt = new Date(m.date);
+      var dateStr = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+      var groupLabel = m.group ? 'Group ' + m.group : m.stage.replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
+      upList.innerHTML += '<div class="match-card"><div class="match-meta"><span>' + groupLabel + '</span><span>' + dateStr + '</span></div><div class="match-teams"><span class="match-team">' + flag(m.home_team) + ' ' + m.home_team + '</span><span class="match-score tbd">VS</span><span class="match-team">' + flag(m.away_team) + ' ' + m.away_team + '</span></div></div>';
+    });
+  }
+
+  renderWormChart(worm_data, leaderboard);
+}
+
+function renderWormChart(worm_data, leaderboard) {
+  var ctx = document.getElementById('wormChart').getContext('2d');
+  var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (wormChart) wormChart.destroy();
+  var datasets = leaderboard.map(function(p, i) {
+    return {
+      label: p.name, data: worm_data.players[p.name] || [],
+      borderColor: PLAYER_COLORS[i] || PLAYER_COLORS[3],
+      backgroundColor: (PLAYER_COLORS[i] || PLAYER_COLORS[3]) + '15',
+      borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, fill: false, tension: 0.3
+    };
+  });
+  var dates = (worm_data.dates || []).map(function(d) {
+    var dt = new Date(d);
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+  wormChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: dates.length > 0 ? dates : ['No data'], datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: true, position: 'top', labels: { font: { family: "'Barlow'" }, usePointStyle: true, pointStyle: 'line' } },
+        tooltip: { backgroundColor: isDark ? '#1c2128' : '#fff', titleColor: isDark ? '#e6edf3' : '#111', bodyColor: isDark ? '#8b949e' : '#6b7280', borderColor: isDark ? '#30363d' : '#ced1d9', borderWidth: 1, padding: 10, cornerRadius: 8 }
+      },
+      scales: {
+        x: { grid: { color: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)' }, ticks: { color: isDark ? '#8b949e' : '#6b7280', font: { size: 10 }, maxRotation: 45 } },
+        y: { grid: { color: isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)' }, ticks: { color: isDark ? '#8b949e' : '#6b7280', callback: function(v) { return v + ' pts'; } }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// --- ACTIONS ---
+document.getElementById('btnSync').addEventListener('click', function() {
+  var btn = document.getElementById('btnSync');
+  btn.disabled = true; btn.textContent = 'Syncing...';
+  fetch('/api/sync', { method: 'POST' }).then(function(res) { return res.json().then(function(data) { return {ok: res.ok, data: data}; }); })
+    .then(function(r) { if (r.ok) { showToast('\u2705 ' + r.data.message); } else { showToast('\u26A0\uFE0F ' + r.data.detail); } })
+    .catch(function() { showToast('\u274C Sync failed'); })
+    .finally(function() { btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sync'; setTimeout(loadData, 500); });
+});
+
+document.getElementById('btnValidate').addEventListener('click', function() {
+  var btn = document.getElementById('btnValidate');
+  btn.disabled = true; btn.textContent = 'Validating...';
+  fetch('/api/validate', { method: 'POST' }).then(function(res) { return res.json().then(function(data) { return {ok: res.ok, data: data}; }); })
+    .then(function(r) { if (r.ok) { showToast(r.data.healthy ? '\u2705 All checks passed!' : '\u26A0\uFE0F Issues: ' + r.data.summary); } else { showToast('\u26A0\uFE0F ' + r.data.detail); } })
+    .catch(function() { showToast('\u274C Validation failed'); })
+    .finally(function() { btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Validate'; setTimeout(loadData, 500); });
+});
+
+document.getElementById('btnShare').addEventListener('click', function() {
+  fetch('/api/share-text').then(function(res) { return res.json(); }).then(function(data) {
+    var text = data.text;
+    // Show modal with copyable text (clipboard API fails in embedded browsers)
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:2000;display:flex;align-items:center;justify-content:center;padding:1rem';
+    var modal = document.createElement('div');
+    modal.style.cssText = 'background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:1.5rem;max-width:420px;width:100%;box-shadow:var(--shadow-lg)';
+    modal.innerHTML = '<div style="font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;margin-bottom:.75rem">📋 Share Text</div><textarea id="shareTextArea" readonly style="width:100%;height:220px;background:var(--color-surface-2);color:var(--color-text);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:.75rem;font-size:var(--text-sm);font-family:var(--font-body);resize:none;line-height:1.5"></textarea><div style="display:flex;gap:.5rem;margin-top:.75rem"><button id="shareCopyBtn" class="btn btn-primary" style="flex:1">Copy to Clipboard</button><button id="shareCloseBtn" class="btn btn-secondary" style="flex:1">Close</button></div>';
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    var ta = document.getElementById('shareTextArea');
+    ta.value = text;
+    ta.select();
+    document.getElementById('shareCopyBtn').onclick = function() {
+      ta.select(); ta.setSelectionRange(0, 99999);
+      try { document.execCommand('copy'); showToast('\u{1F4CB} Copied! Paste in WhatsApp'); } catch(e) { showToast('\u26A0\uFE0F Select all text and copy manually'); }
+    };
+    document.getElementById('shareCloseBtn').onclick = function() { document.body.removeChild(overlay); };
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) document.body.removeChild(overlay); });
+  }).catch(function() { showToast('\u274C Failed to load share text'); });
+});
+
+document.getElementById('themeToggle').addEventListener('click', function() {
+  var html = document.documentElement;
+  var next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  loadData();
+});
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+loadData();
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>

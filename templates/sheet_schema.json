@@ -1,0 +1,26 @@
+{
+  "sheet_schema": {
+    "tabs": [
+      {
+        "title": "Draft Picks",
+        "description": "Which friend picked which national teams",
+        "columns": ["Player", "Team 1", "Team 2", "Team 3", "Team 4", "Team 5", "Team 6", "Team 7", "Team 8", "Team 9", "Team 10"]
+      },
+      {
+        "title": "Match Schedule",
+        "description": "All 104 FIFA 2026 matches with scores and fantasy points",
+        "columns": ["Date", "Stage", "Group", "Home Team", "Away Team", "Home Goals", "Away Goals", "Home Penalties", "Away Penalties", "Status", "Home Points", "Away Points"]
+      },
+      {
+        "title": "Leaderboard",
+        "description": "Current standings — who is winning the draft",
+        "columns": ["Rank", "Player", "Total Points", "Team 1 (pts)", "Team 2 (pts)", "..."]
+      },
+      {
+        "title": "Scoring Rules",
+        "description": "Reference tab showing how points are calculated",
+        "columns": ["Category", "Event", "Points", "Notes"]
+      }
+    ]
+  }
+}
