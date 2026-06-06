@@ -3,15 +3,13 @@
 Rules:
   Group Stage:
     - Win: 3 points
-    - Draw: 1.5 points
-    - Goal scored: 0.5 points
-    - Goal conceded: -0.25 points
+    - Draw: 1.5 points for each team
+    - Goal scored: 0.5 points for each goal scored
 
-  Knockout Rounds:
+  Knockout Rounds (Round of 32 onwards till Final):
     - Win: 3 points
     - Draw (after 90/120 min): 1.5 points
-    - Goal scored: 0.75 points (higher value in knockouts)
-    - Goal conceded: -0.25 points
+    - Goal scored: 0.75 points for each goal scored
     - Penalty shootout goals: DO NOT count
 """
 
@@ -28,13 +26,13 @@ class ScoringRules:
     group_win: float = 3.0
     group_draw: float = 1.5
     group_goal_scored: float = 0.5
-    group_goal_conceded: float = -0.25
+    group_goal_conceded: float = 0.0  # No negative points
 
     # Knockout rounds
     knockout_win: float = 3.0
     knockout_draw: float = 1.5  # If match goes to penalties, both teams drew in regular time
     knockout_goal_scored: float = 0.75
-    knockout_goal_conceded: float = -0.25
+    knockout_goal_conceded: float = 0.0  # No negative points
 
     def to_dict(self) -> dict:
         return {

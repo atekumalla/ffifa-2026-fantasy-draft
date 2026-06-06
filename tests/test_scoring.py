@@ -35,27 +35,27 @@ class TestGroupStageScoring:
     """Test group stage scoring rules."""
 
     def test_win_3_0(self):
-        """Win 3-0: winner gets 3 (win) + 1.5 (3 goals) = 4.5, loser gets -0.75"""
+        """Win 3-0: winner gets 3 (win) + 1.5 (3 goals) = 4.5, loser gets 0"""
         calc = ScoringCalculator()
         match = make_match(home_goals=3, away_goals=0)
         points = calc.calculate_match_points(match)
 
-        # Home: 3 (win) + 3*0.5 (goals scored) + 0*(-0.25) (goals conceded) = 4.5
+        # Home: 3 (win) + 3*0.5 (goals scored) = 4.5
         assert points["Team A"] == 4.5
-        # Away: 0 (loss) + 0*0.5 (goals scored) + 3*(-0.25) (goals conceded) = -0.75
-        assert points["Team B"] == -0.75
+        # Away: 0 (loss) + 0*0.5 (goals scored) = 0
+        assert points["Team B"] == 0.0
 
     def test_draw_1_1(self):
-        """Draw 1-1: each team gets 1.5 (draw) + 0.5 (1 goal) - 0.25 (1 conceded) = 1.75"""
+        """Draw 1-1: each team gets 1.5 (draw) + 0.5 (1 goal) = 2.0"""
         calc = ScoringCalculator()
         match = make_match(home_goals=1, away_goals=1)
         points = calc.calculate_match_points(match)
 
-        assert points["Team A"] == 1.75
-        assert points["Team B"] == 1.75
+        assert points["Team A"] == 2.0
+        assert points["Team B"] == 2.0
 
     def test_draw_0_0(self):
-        """Draw 0-0: each team gets 1.5 (draw) + 0 + 0 = 1.5"""
+        """Draw 0-0: each team gets 1.5 (draw) + 0 = 1.5"""
         calc = ScoringCalculator()
         match = make_match(home_goals=0, away_goals=0)
         points = calc.calculate_match_points(match)
@@ -64,41 +64,41 @@ class TestGroupStageScoring:
         assert points["Team B"] == 1.5
 
     def test_win_2_1(self):
-        """Win 2-1: winner gets 3 + 1.0 - 0.25 = 3.75, loser gets 0 + 0.5 - 0.5 = 0.0"""
+        """Win 2-1: winner gets 3 + 1.0 = 4.0, loser gets 0 + 0.5 = 0.5"""
         calc = ScoringCalculator()
         match = make_match(home_goals=2, away_goals=1)
         points = calc.calculate_match_points(match)
 
-        # Home: 3 (win) + 2*0.5 - 1*0.25 = 3.75
-        assert points["Team A"] == 3.75
-        # Away: 0 (loss) + 1*0.5 - 2*0.25 = 0.0
-        assert points["Team B"] == 0.0
+        # Home: 3 (win) + 2*0.5 = 4.0
+        assert points["Team A"] == 4.0
+        # Away: 0 (loss) + 1*0.5 = 0.5
+        assert points["Team B"] == 0.5
 
     def test_high_scoring_draw(self):
-        """Draw 3-3: each team gets 1.5 + 1.5 - 0.75 = 2.25"""
+        """Draw 3-3: each team gets 1.5 + 1.5 = 3.0"""
         calc = ScoringCalculator()
         match = make_match(home_goals=3, away_goals=3)
         points = calc.calculate_match_points(match)
 
-        assert points["Team A"] == 2.25
-        assert points["Team B"] == 2.25
+        assert points["Team A"] == 3.0
+        assert points["Team B"] == 3.0
 
 
 class TestKnockoutScoring:
     """Test knockout stage scoring rules."""
 
     def test_knockout_win_2_0(self):
-        """Knockout win 2-0: winner gets 3 + 2*0.75 = 4.5"""
+        """Knockout win 2-0: winner gets 3 + 2*0.75 = 4.5, loser gets 0"""
         calc = ScoringCalculator()
         match = make_match(
             home_goals=2, away_goals=0, stage=MatchStage.ROUND_OF_16
         )
         points = calc.calculate_match_points(match)
 
-        # Home: 3 (win) + 2*0.75 + 0*(-0.25) = 4.5
+        # Home: 3 (win) + 2*0.75 = 4.5
         assert points["Team A"] == 4.5
-        # Away: 0 (loss) + 0*0.75 + 2*(-0.25) = -0.5
-        assert points["Team B"] == -0.5
+        # Away: 0 (loss) + 0*0.75 = 0
+        assert points["Team B"] == 0.0
 
     def test_knockout_draw_with_penalties(self):
         """1-1 draw going to penalties: both get draw points, penalties don't count."""
@@ -113,9 +113,9 @@ class TestKnockoutScoring:
         points = calc.calculate_match_points(match)
 
         # Both teams drew 1-1 in regular time
-        # Each: 1.5 (draw) + 1*0.75 - 1*0.25 = 2.0
-        assert points["Team A"] == 2.0
-        assert points["Team B"] == 2.0
+        # Each: 1.5 (draw) + 1*0.75 = 2.25
+        assert points["Team A"] == 2.25
+        assert points["Team B"] == 2.25
 
     def test_knockout_goal_value_higher(self):
         """Knockout goals worth 0.75 vs group stage 0.5."""
@@ -138,8 +138,10 @@ class TestKnockoutScoring:
         match = make_match(home_goals=3, away_goals=1, stage=MatchStage.FINAL)
         points = calc.calculate_match_points(match)
 
-        # Home: 3 (win) + 3*0.75 - 1*0.25 = 5.0
-        assert points["Team A"] == 5.0
+        # Home: 3 (win) + 3*0.75 = 5.25
+        assert points["Team A"] == 5.25
+        # Away: 0 (loss) + 1*0.75 = 0.75
+        assert points["Team B"] == 0.75
 
 
 class TestPlayerTotals:
@@ -157,9 +159,9 @@ class TestPlayerTotals:
         total = calc.calculate_player_total(["Brazil", "France"], matches)
 
         # Brazil in match 1: 3 + 1.0 = 4.0
-        # Brazil in match 2: 1.5 + 0.5 - 0.25 = 1.75
-        # France in match 2: 1.5 + 0.5 - 0.25 = 1.75
-        assert total == 7.5
+        # Brazil in match 2: 1.5 + 0.5 = 2.0
+        # France in match 2: 1.5 + 0.5 = 2.0
+        assert total == 8.0
 
     def test_unplayed_match_gives_zero(self):
         """Scheduled matches don't contribute points."""

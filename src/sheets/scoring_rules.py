@@ -31,19 +31,18 @@ def write_scoring_rules(client: SheetsClient, rules: ScoringRules | None = None)
         [],
         ["GROUP STAGE", "", "", ""],
         ["", "Win", rules.group_win, "Team wins the match"],
-        ["", "Draw", rules.group_draw, "Match ends in a draw"],
+        ["", "Draw", rules.group_draw, "Match ends in a draw (1.5 pts for each team)"],
         ["", "Goal Scored", rules.group_goal_scored, "Per goal in regular time"],
-        ["", "Goal Conceded", rules.group_goal_conceded, "Per goal conceded"],
         [],
         ["KNOCKOUT ROUNDS", "", "", ""],
         ["", "Win", rules.knockout_win, "Team wins (regular/ET)"],
         ["", "Draw (to Penalties)", rules.knockout_draw, "If match goes to shootout"],
         ["", "Goal Scored", rules.knockout_goal_scored, "Per goal in regular/extra time"],
-        ["", "Goal Conceded", rules.knockout_goal_conceded, "Per goal conceded"],
         [],
         ["IMPORTANT NOTES", "", "", ""],
         ["", "Penalty Shootout", "N/A", "Penalty goals do NOT count for scoring"],
         ["", "Extra Time Goals", "Count", "Goals in extra time count as regular goals"],
+        ["", "Goals Conceded", "0", "No negative points for goals conceded"],
     ]
 
     client.write_all_values(WORKSHEET_TITLE, rows)

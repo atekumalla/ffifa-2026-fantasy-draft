@@ -17,8 +17,9 @@ A complete fantasy draft system for the FIFA 2026 World Cup with a real-time web
 | Win | 3 pts | 3 pts |
 | Draw | 1.5 pts | 1.5 pts |
 | Goal Scored | 0.5 pts | 0.75 pts |
-| Goal Conceded | -0.25 pts | -0.25 pts |
 | Penalty Shootout Goals | ❌ Don't count | ❌ Don't count |
+
+**Note:** Goals conceded no longer result in negative points.
 
 ## Architecture
 
