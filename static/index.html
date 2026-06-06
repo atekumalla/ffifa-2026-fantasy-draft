@@ -273,7 +273,7 @@ function renderDashboard(data) {
   // Leader banner
   if (leaderboard.length > 0) {
     var leader = leaderboard[0];
-    var gap = leaderboard.length > 1 ? (leader.total_points - leaderboard[1].total_points).toFixed(1) : 0;
+    var gap = leaderboard.length > 1 ? (leader.total_points - leaderboard[1].total_points).toFixed(2) : 0;
     document.getElementById('leaderAvatar').textContent = leader.name[0];
     document.getElementById('leaderName').textContent = leader.name;
     document.getElementById('leaderPts').innerHTML = '<strong>' + leader.total_points + ' pts</strong> \u00B7 ' + gap + ' pts ahead';
@@ -296,7 +296,7 @@ function renderDashboard(data) {
   var maxPts = leaderboard[0] ? leaderboard[0].total_points : 1;
   leaderboard.forEach(function(p, i) {
     var color = PLAYER_COLORS[i] || PLAYER_COLORS[3];
-    var g = i === 0 ? '\u2014' : (p.total_points - leaderboard[0].total_points).toFixed(1);
+    var g = i === 0 ? '\u2014' : (p.total_points - leaderboard[0].total_points).toFixed(2);
     tbody.innerHTML += '<tr><td style="font-family:var(--font-display);font-weight:700;color:var(--color-text-muted)">' + (i+1) + '</td><td><div class="player-cell"><div class="mini-avatar" style="background:' + color + '22;color:' + color + '">' + p.name[0] + '</div><span style="font-weight:600">' + p.name + '</span></div></td><td class="total-col" style="color:' + color + '">' + p.total_points + '</td><td style="color:' + (i===0?'var(--color-text-muted)':'var(--color-error)') + ';font-weight:700">' + g + '</td></tr>';
   });
 
