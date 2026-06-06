@@ -350,7 +350,7 @@ async def get_share_text():
         lines.append(f"📈 Gap: {standings[0][0]} leads by {gap} pts")
 
     lines.append("")
-    lines.append("🔗 _Updated live at pakodis-fifa-draft.onrender.com_")
+    lines.append("🔗 _Updated live at https://ffifa-2026-fantasy-draft.onrender.com/_")
 
     share_text = "\n".join(lines)
     return {"text": share_text}
