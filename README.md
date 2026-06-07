@@ -98,24 +98,45 @@ The server will:
 
 ## Quick Start (Demo Mode) 🎮
 
-**Try the app instantly without any credentials!**
+**Try the app instantly with two demo options!**
 
+### Option 1: In-Memory Demo (No Setup)
 ```bash
-# No setup needed, just run:
+# No credentials needed!
+python -m src.server --demo
+```
+
+### Option 2: Google Sheets Demo (With Real Integration)
+```bash
+# Configure .env with Google Sheets credentials
+# Optionally add OPENAI_API_KEY for validation testing
 python -m src.server --demo
 ```
 
 Then open **http://localhost:8000**
 
 **Demo features:**
-- Pre-filled with 18 completed group stage matches
-- Click "Sync Scores" to reveal one more match result
-- Click "Validate" to run integrity checks (validation disabled in demo)
-- Fully interactive dashboard with fake but realistic data
-- 5-second cooldown (instead of 10 min) for testing
+- ✅ Pre-filled with 18 completed group stage matches
+- ✅ Click "Sync Scores" to reveal one more match result
+- ✅ Interactive dashboard with realistic data
+- ✅ 5-second cooldown (instead of 10 min) for testing
+- ✅ **NEW**: Test with real Google Sheets if configured
+- ✅ **NEW**: Test OpenAI validation if API key provided
+- ✅ Stubbed Football API (no rate limits)
+
+**What gets tested in Google Sheets Demo:**
+- Sheet creation and formatting
+- UI rendering from real sheet data
+- Google Sheets API credentials
+- OpenAI validation (if configured)
+- Sync/update workflows
+
+📖 **Full guide**: See [docs/DEMO_MODE.md](docs/DEMO_MODE.md)
 
 Perfect for:
-- Testing the UI without API keys
+- Testing the UI without full production setup
+- Verifying Google Sheets integration
+- Testing OpenAI validation
 - Demoing the app to friends
 - Development and iteration
 

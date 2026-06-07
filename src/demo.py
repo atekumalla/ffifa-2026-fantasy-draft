@@ -1,11 +1,24 @@
-"""Demo mode - run the dashboard with pre-filled fake data, no credentials needed.
+"""Demo mode - run the dashboard with pre-filled fake data.
+
+Two modes of operation:
+1. In-memory only (original): --demo flag, no credentials needed
+2. With Google Sheets (new): --demo flag + credentials in .env
+   - Creates/updates a real Google Sheet with pre-seeded data
+   - Uses stubbed Football API (no real API calls)
+   - Uses real OpenAI API for validation testing
+   - Tests: Sheet creation, UI rendering, credentials access
 
 Generates realistic match results for ~18 completed group stage matches,
 schedules upcoming matches relative to today, and lets you "sync" to reveal
 one more match result at a time.
 
 Usage:
+    # In-memory demo (no credentials)
     python -m src.server --demo
+    
+    # With Google Sheets (requires .env setup)
+    python -m src.server --demo
+    # Set DEMO_GOOGLE_SHEETS_ID in .env to use a specific demo sheet
 """
 
 from __future__ import annotations
@@ -111,8 +124,8 @@ def _generate_demo_schedule(today: date) -> list[Match]:
     matches: list[Match] = []
     match_num = 1
 
-    # Tournament starts 6 days before today
-    tournament_start = today - timedelta(days=6)
+    # Tournament starts 2 days before today (so matches are recent for LLM validation)
+    tournament_start = today - timedelta(days=2)
 
     # Group stage: each group has 6 matches (round-robin of 4 teams)
     day_offset = 0
@@ -409,6 +422,9 @@ class DemoState:
         """Build the complete API response for /api/status."""
         played = sum(1 for m in self.matches if m.is_played)
         pending_group = len(self._next_unplayed_group_matches)
+        
+        # Note: validation availability is determined by server.py
+        # based on whether sheets and OpenAI are configured
         return {
             "leaderboard": self.get_leaderboard(),
             "recent_matches": self.get_recent_matches(),
@@ -420,9 +436,94 @@ class DemoState:
             "spreadsheet_url": "#demo-mode",
             "sync_available": True,
             "sync_wait_seconds": 0,
-            "validate_available": False,
+            "validate_available": False,  # Will be overridden by server if applicable
             "validate_wait_seconds": 0,
             "demo_mode": True,
             "pending_matches": pending_group,
             "player_names": [p.name for p in self.players],
         }
+
+
+# --- GOOGLE SHEETS INTEGRATION (NEW) ---
+
+def initialize_demo_sheet(sheets_client, today: Optional[date] = None) -> DemoState:
+    """
+    Initialize Google Sheets with demo data and return a DemoState.
+    
+    This creates a real spreadsheet with:
+    - Pre-seeded demo players and their draft picks
+    - Full tournament schedule
+    - ~18 matches already scored
+    - Scoring rules
+    
+    Args:
+        sheets_client: Configured SheetsClient instance
+        today: Optional date for schedule generation (default: today)
+    
+    Returns:
+        DemoState instance tracking the demo data
+    """
+    from src.sheets.players import write_draft_picks
+    from src.sheets.schedule import write_schedule
+    from src.sheets.scoring_rules import write_scoring_rules
+    from src.sheets.scores import write_leaderboard
+    
+    logger.info("=" * 60)
+    logger.info("Initializing Google Sheet with demo data...")
+    logger.info("=" * 60)
+    
+    # Create demo state (this generates players, matches, etc.)
+    demo = DemoState(today)
+    
+    # Write to sheets
+    logger.info("Writing draft picks to sheet...")
+    write_draft_picks(sheets_client, demo.players)
+    
+    logger.info("Writing full schedule with pre-scored matches...")
+    write_schedule(sheets_client, demo.matches)
+    
+    logger.info("Writing scoring rules...")
+    write_scoring_rules(sheets_client)
+    
+    logger.info("Writing initial leaderboard...")
+    write_leaderboard(sheets_client, demo.players, demo.matches, demo.calculator)
+    
+    logger.info("=" * 60)
+    logger.info("✅ Demo sheet initialized successfully!")
+    logger.info(f"   - {len(demo.players)} players with draft picks")
+    logger.info(f"   - {len(demo.matches)} matches in schedule")
+    logger.info(f"   - {sum(1 for m in demo.matches if m.is_played)} matches pre-scored")
+    logger.info("=" * 60)
+    
+    return demo
+
+
+def sync_demo_to_sheet(demo: DemoState, sheets_client) -> dict:
+    """
+    Perform a demo sync: score next match and update the sheet.
+    
+    Args:
+        demo: DemoState instance
+        sheets_client: Configured SheetsClient instance
+    
+    Returns:
+        Sync result dictionary
+    """
+    from src.sheets.schedule import write_schedule
+    from src.sheets.scores import write_leaderboard
+    
+    # Score next match in demo state
+    result = demo.do_sync()
+    
+    if result["match"]:
+        logger.info(f"Demo sync: updating sheet with new result...")
+        
+        # Update schedule sheet with new scores
+        write_schedule(sheets_client, demo.matches)
+        
+        # Update leaderboard
+        write_leaderboard(sheets_client, demo.players, demo.matches, demo.calculator)
+        
+        logger.info("✅ Demo sync: sheet updated")
+    
+    return result

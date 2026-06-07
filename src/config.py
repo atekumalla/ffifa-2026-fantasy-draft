@@ -54,6 +54,11 @@ class Config:
     # --- Deployment ---
     PORT: int = int(os.getenv("PORT", "8000"))
 
+    # --- Demo Mode ---
+    # Optional: Use a separate spreadsheet for demo mode testing
+    DEMO_GOOGLE_SHEETS_ID: str = os.getenv("DEMO_GOOGLE_SHEETS_ID", "")
+    # If set, demo mode will use this instead of GOOGLE_SHEETS_ID
+
     @classmethod
     def has_credentials_json(cls) -> bool:
         """Check if credentials are provided as a JSON env var (for hosted deploys)."""

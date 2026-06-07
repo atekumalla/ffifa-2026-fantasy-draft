@@ -48,24 +48,79 @@ async def lifespan(app: FastAPI):
     setup_logging()
 
     if _is_demo_mode():
-        from src.demo import DemoState, DEMO_COOLDOWN_SECONDS
+        from src.config import Config
+        from src.demo import DemoState, DEMO_COOLDOWN_SECONDS, initialize_demo_sheet
+        from src.data_sources.football_api_stub import FootballDataAPIStub
+        from src.data_sources.llm_fallback import LLMFallback
 
         logger.info("=" * 60)
-        logger.info("🎮 DEMO MODE — no credentials required!")
-        logger.info("   Pre-filled with 18 match results. Hit Sync to reveal more.")
+        logger.info("🎮 DEMO MODE")
+        
+        # Check if we should use Google Sheets for demo
+        demo_sheet_id = Config.DEMO_GOOGLE_SHEETS_ID or Config.GOOGLE_SHEETS_ID
+        use_sheets = bool(demo_sheet_id) and (
+            Config.has_credentials_json() or 
+            Path(Config.GOOGLE_SHEETS_CREDENTIALS_FILE).exists()
+        )
+        
+        if use_sheets:
+            logger.info("   ✅ Using REAL Google Sheets with pre-seeded data")
+            logger.info("   ✅ Using STUBBED Football API (no real API calls)")
+            logger.info(f"   ✅ Using {'REAL' if Config.OPENAI_API_KEY else 'NO'} OpenAI API for validation")
+            logger.info(f"   📊 Sheet ID: {demo_sheet_id}")
+        else:
+            logger.info("   ⚠️  In-memory only (no Google Sheets credentials)")
+            logger.info("   Pre-filled with 18 match results. Hit Sync to reveal more.")
         logger.info("=" * 60)
 
         # Reduce rate limiter cooldown for demo (5 seconds)
         rate_limiter.cooldown_seconds = DEMO_COOLDOWN_SECONDS
 
-        demo = DemoState()
-        _app_state.update({
-            "demo_mode": True,
-            "demo_state": demo,
-            "players": demo.players,
-            "matches": demo.matches,
-            "calculator": demo.calculator,
-        })
+        _app_state["demo_mode"] = True
+        _app_state["use_sheets"] = use_sheets
+        
+        if use_sheets:
+            # Set up with real Google Sheets
+            from src.sheets.client import SheetsClient
+            from src.sheets.players import read_draft_picks
+            from src.sheets.schedule import read_schedule
+            
+            # Override sheet ID if demo-specific one is provided
+            if Config.DEMO_GOOGLE_SHEETS_ID:
+                original_sheet_id = Config.GOOGLE_SHEETS_ID
+                Config.GOOGLE_SHEETS_ID = Config.DEMO_GOOGLE_SHEETS_ID
+                logger.info(f"Using demo-specific sheet: {Config.DEMO_GOOGLE_SHEETS_ID}")
+            
+            sheets_client = SheetsClient()
+            
+            # Initialize sheet with demo data
+            demo = initialize_demo_sheet(sheets_client)
+            
+            # Read back from sheets to verify
+            players = read_draft_picks(sheets_client)
+            matches = read_schedule(sheets_client)
+            
+            _app_state.update({
+                "demo_state": demo,
+                "sheets_client": sheets_client,
+                "players": players,
+                "matches": matches,
+                "calculator": demo.calculator,
+                "football_api": FootballDataAPIStub(),  # Stubbed!
+                "llm_fallback": LLMFallback() if Config.OPENAI_API_KEY else None,
+            })
+            
+            logger.info(f"✅ Loaded {len(players)} players, {len(matches)} matches from sheet")
+        else:
+            # In-memory only demo (original behavior)
+            demo = DemoState()
+            _app_state.update({
+                "demo_state": demo,
+                "players": demo.players,
+                "matches": demo.matches,
+                "calculator": demo.calculator,
+                "sheets_client": None,
+            })
 
         logger.info("Demo server ready! Open http://localhost:8000")
         yield
@@ -143,8 +198,25 @@ async def get_status():
     """Get current state: leaderboard, matches, last sync time."""
     # Demo mode: use DemoState directly
     if _app_state.get("demo_mode"):
+        from src.config import Config
+        
         demo = _app_state["demo_state"]
-        return demo.get_full_status()
+        status = demo.get_full_status()
+        
+        # Update validation availability based on configuration
+        if _app_state.get("use_sheets") and Config.OPENAI_API_KEY:
+            sync_ready, sync_wait = rate_limiter.can_call("sync"), rate_limiter.seconds_until_ready("sync")
+            validate_ready, validate_wait = rate_limiter.can_call("validate"), rate_limiter.seconds_until_ready("validate")
+            
+            status.update({
+                "sync_available": sync_ready,
+                "sync_wait_seconds": sync_wait,
+                "validate_available": validate_ready,
+                "validate_wait_seconds": validate_wait,
+                "spreadsheet_url": f"https://docs.google.com/spreadsheets/d/{Config.DEMO_GOOGLE_SHEETS_ID or Config.GOOGLE_SHEETS_ID}",
+            })
+        
+        return status
 
     # Production mode
     from src.config import Config
@@ -241,10 +313,25 @@ async def trigger_sync():
                 status_code=429,
                 detail=f"Rate limited. Try again in {wait_seconds} seconds.",
             )
+        
         demo = _app_state["demo_state"]
-        result = demo.do_sync()
-        # Update the matches reference in app state
-        _app_state["matches"] = demo.matches
+        
+        # If using sheets, sync to sheet as well
+        if _app_state.get("use_sheets"):
+            from src.demo import sync_demo_to_sheet
+            sheets_client = _app_state["sheets_client"]
+            result = sync_demo_to_sheet(demo, sheets_client)
+            
+            # Re-read from sheets to keep state synchronized
+            from src.sheets.players import read_draft_picks
+            from src.sheets.schedule import read_schedule
+            _app_state["players"] = read_draft_picks(sheets_client)
+            _app_state["matches"] = read_schedule(sheets_client)
+        else:
+            # In-memory only
+            result = demo.do_sync()
+            _app_state["matches"] = demo.matches
+        
         return result
 
     # Production mode
@@ -265,28 +352,73 @@ async def trigger_sync():
 
 @app.post("/api/validate")
 async def trigger_validate():
-    """Trigger validation. Rate limited. Disabled in demo mode."""
-    # Demo mode: return a canned response
-    if _app_state.get("demo_mode"):
-        return {
-            "status": "ok",
-            "healthy": True,
-            "summary": "Demo mode — validation skipped (all data is generated)",
-            "issues": [],
-            "checks_passed": 5,
-            "checks_failed": 0,
-        }
-
-    # Production mode
-    from src.config import Config
-    from src.validation import run_full_validation
-
+    """Trigger validation. Rate limited. Works in demo mode if OpenAI is configured."""
+    # Check rate limit first
     allowed, wait_seconds = rate_limiter.try_call("validate")
     if not allowed:
         raise HTTPException(
             status_code=429,
             detail=f"Rate limited. Try again in {wait_seconds} seconds.",
         )
+    
+    # Demo mode with sheets: run real validation if OpenAI is available
+    if _app_state.get("demo_mode"):
+        from src.config import Config
+        
+        if not _app_state.get("use_sheets"):
+            # In-memory demo: skip validation
+            return {
+                "status": "ok",
+                "healthy": True,
+                "summary": "Demo mode (in-memory) — validation skipped",
+                "issues": [],
+                "checks_passed": 5,
+                "checks_failed": 0,
+            }
+        
+        # Demo with sheets: run validation if OpenAI is configured
+        if not Config.OPENAI_API_KEY:
+            return {
+                "status": "ok",
+                "healthy": True,
+                "summary": "Demo mode — OpenAI API not configured, structural checks only",
+                "issues": [],
+                "checks_passed": 5,
+                "checks_failed": 0,
+            }
+        
+        # Run real validation in demo mode!
+        from src.validation import run_full_validation
+        
+        try:
+            matches = _app_state.get("matches", [])
+            players = _app_state.get("players", [])
+            
+            logger.info("🎮 Demo mode: Running REAL validation with OpenAI...")
+            report = run_full_validation(
+                matches, 
+                players, 
+                use_llm=True
+            )
+            
+            return {
+                "status": "ok",
+                "healthy": report.is_healthy,
+                "summary": f"Demo validation: {report.summary()}",
+                "issues": [
+                    {"severity": i.severity, "message": i.message, "details": i.details}
+                    for i in report.issues
+                ],
+                "checks_passed": report.checks_passed,
+                "checks_failed": report.checks_failed,
+            }
+        except Exception as e:
+            logger.error(f"Demo validation failed: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+
+    # Production mode
+    from src.config import Config
+    from src.validation import run_full_validation
 
     try:
         matches = _app_state.get("matches", [])
