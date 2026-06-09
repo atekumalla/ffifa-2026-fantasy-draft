@@ -63,6 +63,11 @@ class Config:
     # Optional: URL to include in share messages (e.g., dashboard link)
     DASHBOARD_URL: str = os.getenv("DASHBOARD_URL", "")
 
+    # --- Rate Limiting ---
+    # Cooldown period (in seconds) between manual sync/validate calls
+    # Default: 600 seconds (10 minutes) to avoid hammering APIs
+    SYNC_COOLDOWN_SECONDS: int = int(os.getenv("SYNC_COOLDOWN_SECONDS", "600"))
+
     @classmethod
     def has_credentials_json(cls) -> bool:
         """Check if credentials are provided as a JSON env var (for hosted deploys)."""

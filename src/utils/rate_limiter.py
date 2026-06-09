@@ -1,6 +1,6 @@
 """Rate limiter — prevents excessive API/LLM calls.
 
-Ensures sync and validate can't be called more than once every 10 minutes,
+Ensures sync and validate can't be called too frequently,
 protecting against accidental DOS and API rate limits.
 """
 
@@ -13,14 +13,11 @@ from typing import Callable
 
 logger = logging.getLogger(__name__)
 
-# Default cooldown: 10 minutes (600 seconds)
-DEFAULT_COOLDOWN_SECONDS = 600
-
 
 class RateLimiter:
     """Simple per-function rate limiter with configurable cooldown."""
 
-    def __init__(self, cooldown_seconds: int = DEFAULT_COOLDOWN_SECONDS):
+    def __init__(self, cooldown_seconds: int = 600):
         self.cooldown_seconds = cooldown_seconds
         self._last_called: dict[str, float] = {}
 
@@ -62,4 +59,5 @@ class RateLimiter:
 
 
 # Global rate limiter instance (shared across the app)
-rate_limiter = RateLimiter(cooldown_seconds=DEFAULT_COOLDOWN_SECONDS)
+# Cooldown is loaded from Config when first imported in server.py
+rate_limiter = RateLimiter(cooldown_seconds=600)  # Default, can be overridden

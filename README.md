@@ -235,6 +235,7 @@ Results are logged to the **Validation Log** tab in Google Sheets with:
    SYNC_HOUR=6
    SYNC_MINUTE=0
    DASHBOARD_URL=https://your-app-name.onrender.com  # Optional: for share messages
+   SYNC_COOLDOWN_SECONDS=600  # Optional: 10 min cooldown (default)
    ```
 4. **Deploy!** Render will auto-detect `Procfile` and run:
    ```
@@ -340,6 +341,8 @@ tests/
 | `STATE_FILE` | No | `state/last_sync.json` | Path to state file |
 | `PORT` | No | `8000` | Web server port |
 | `LOG_LEVEL` | No | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
+| `DASHBOARD_URL` | No | — | URL for share messages (e.g., your deployed site) |
+| `SYNC_COOLDOWN_SECONDS` | No | `600` | Cooldown (seconds) between manual sync/validate (10 min default) |
 
 *Either `_JSON` or `_FILE` must be set for Google Sheets credentials.
 

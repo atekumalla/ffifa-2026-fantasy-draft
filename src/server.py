@@ -138,6 +138,10 @@ async def lifespan(app: FastAPI):
 
         logger.info("Starting FIFA 2026 Fantasy Draft server (production)...")
 
+        # Set rate limiter cooldown from config
+        rate_limiter.cooldown_seconds = Config.SYNC_COOLDOWN_SECONDS
+        logger.info(f"Rate limiter: {Config.SYNC_COOLDOWN_SECONDS}s cooldown between manual syncs")
+
         state = {
             "demo_mode": False,
             "sheets_client": SheetsClient(),
