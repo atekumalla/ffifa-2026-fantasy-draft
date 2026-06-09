@@ -234,6 +234,7 @@ Results are logged to the **Validation Log** tab in Google Sheets with:
    OPENAI_API_KEY=sk-...
    SYNC_HOUR=6
    SYNC_MINUTE=0
+   DASHBOARD_URL=https://your-app-name.onrender.com  # Optional: for share messages
    ```
 4. **Deploy!** Render will auto-detect `Procfile` and run:
    ```

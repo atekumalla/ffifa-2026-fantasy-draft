@@ -59,6 +59,10 @@ class Config:
     DEMO_GOOGLE_SHEETS_ID: str = os.getenv("DEMO_GOOGLE_SHEETS_ID", "")
     # If set, demo mode will use this instead of GOOGLE_SHEETS_ID
 
+    # --- Share Message ---
+    # Optional: URL to include in share messages (e.g., dashboard link)
+    DASHBOARD_URL: str = os.getenv("DASHBOARD_URL", "")
+
     @classmethod
     def has_credentials_json(cls) -> bool:
         """Check if credentials are provided as a JSON env var (for hosted deploys)."""

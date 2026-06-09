@@ -23,6 +23,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from src.config import Config
 from src.models.match import Match, MatchStatus
 from src.models.player import DraftPlayer
 from src.scoring.calculator import ScoringCalculator
@@ -481,8 +482,10 @@ async def get_share_text():
         lines.append("")
         lines.append(f"📈 Gap: {standings[0][0]} leads by {gap} pts")
 
-    lines.append("")
-    lines.append("🔗 _Updated live at https://ffifa-2026-fantasy-draft.onrender.com/_")
+    # Add dashboard link if configured
+    if Config.DASHBOARD_URL:
+        lines.append("")
+        lines.append(f"🔗 _Updated live at {Config.DASHBOARD_URL}_")
 
     share_text = "\n".join(lines)
     return {"text": share_text}
