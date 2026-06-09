@@ -37,30 +37,28 @@ logger = logging.getLogger(__name__)
 # Hosts: USA, Canada, Mexico
 # ==============================================================================
 
-# NOTE: This is the official FIFA schedule. Update team names once the draw
-# is finalized. For now using placeholder group assignments where needed.
+# NOTE: Updated with official FIFA World Cup 2026 draw results (December 5, 2025)
+# Groups A-L with actual qualified teams
 
 def get_group_stage_matches() -> list[Match]:
     """
     FIFA 2026 Group Stage matches.
     48 teams in 12 groups (A-L), 3 matches per team = 72 group matches.
-    Dates: June 11 - June 29, 2026.
+    Dates: June 11 - June 27, 2026.
     
-    These are based on the confirmed FIFA schedule slots.
-    Team names should be updated after the official draw.
+    Based on the official FIFA World Cup 2026 draw.
     """
     matches = []
     match_num = 1
 
-    # Group A
-    group_a_teams = ["USA", "Group A2", "Group A3", "Group A4"]
+    # Group A: Mexico (host), South Africa, South Korea, Czech Republic
     group_a_dates = [
-        (date(2026, 6, 11), "USA", "Group A2"),
-        (date(2026, 6, 12), "Group A3", "Group A4"),
-        (date(2026, 6, 16), "USA", "Group A3"),
-        (date(2026, 6, 17), "Group A2", "Group A4"),
-        (date(2026, 6, 21), "Group A4", "USA"),
-        (date(2026, 6, 21), "Group A2", "Group A3"),
+        (date(2026, 6, 11), "Mexico", "South Africa"),
+        (date(2026, 6, 11), "South Korea", "Czech Republic"),
+        (date(2026, 6, 18), "Mexico", "South Korea"),
+        (date(2026, 6, 18), "South Africa", "Czech Republic"),
+        (date(2026, 6, 24), "Czech Republic", "Mexico"),
+        (date(2026, 6, 24), "South Africa", "South Korea"),
     ]
     for d, home, away in group_a_dates:
         matches.append(Match(
@@ -74,14 +72,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group B
+    # Group B: Canada (host), Bosnia and Herzegovina, Switzerland, Qatar
     group_b_dates = [
-        (date(2026, 6, 11), "Group B1", "Group B2"),
-        (date(2026, 6, 12), "Group B3", "Group B4"),
-        (date(2026, 6, 16), "Group B1", "Group B3"),
-        (date(2026, 6, 17), "Group B2", "Group B4"),
-        (date(2026, 6, 21), "Group B4", "Group B1"),
-        (date(2026, 6, 21), "Group B2", "Group B3"),
+        (date(2026, 6, 12), "Canada", "Bosnia and Herzegovina"),
+        (date(2026, 6, 13), "Switzerland", "Qatar"),
+        (date(2026, 6, 18), "Switzerland", "Bosnia and Herzegovina"),
+        (date(2026, 6, 18), "Canada", "Qatar"),
+        (date(2026, 6, 24), "Switzerland", "Canada"),
+        (date(2026, 6, 24), "Bosnia and Herzegovina", "Qatar"),
     ]
     for d, home, away in group_b_dates:
         matches.append(Match(
@@ -95,14 +93,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group C
+    # Group C: Brazil, Morocco, Scotland, Haiti
     group_c_dates = [
-        (date(2026, 6, 12), "Mexico", "Group C2"),
-        (date(2026, 6, 13), "Group C3", "Group C4"),
-        (date(2026, 6, 17), "Mexico", "Group C3"),
-        (date(2026, 6, 18), "Group C2", "Group C4"),
-        (date(2026, 6, 22), "Group C4", "Mexico"),
-        (date(2026, 6, 22), "Group C2", "Group C3"),
+        (date(2026, 6, 13), "Brazil", "Morocco"),
+        (date(2026, 6, 13), "Scotland", "Haiti"),
+        (date(2026, 6, 19), "Scotland", "Morocco"),
+        (date(2026, 6, 19), "Brazil", "Haiti"),
+        (date(2026, 6, 24), "Scotland", "Brazil"),
+        (date(2026, 6, 24), "Morocco", "Haiti"),
     ]
     for d, home, away in group_c_dates:
         matches.append(Match(
@@ -116,14 +114,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group D
+    # Group D: USA (host), Paraguay, Turkey, Australia
     group_d_dates = [
-        (date(2026, 6, 13), "Group D1", "Group D2"),
-        (date(2026, 6, 13), "Group D3", "Group D4"),
-        (date(2026, 6, 18), "Group D1", "Group D3"),
-        (date(2026, 6, 18), "Group D2", "Group D4"),
-        (date(2026, 6, 22), "Group D4", "Group D1"),
-        (date(2026, 6, 22), "Group D2", "Group D3"),
+        (date(2026, 6, 12), "USA", "Paraguay"),
+        (date(2026, 6, 13), "Turkey", "Australia"),
+        (date(2026, 6, 19), "USA", "Turkey"),
+        (date(2026, 6, 19), "Paraguay", "Australia"),
+        (date(2026, 6, 25), "Turkey", "USA"),
+        (date(2026, 6, 25), "Paraguay", "Australia"),
     ]
     for d, home, away in group_d_dates:
         matches.append(Match(
@@ -137,14 +135,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group E
+    # Group E: Germany, Curaçao, Ecuador, Ivory Coast
     group_e_dates = [
-        (date(2026, 6, 14), "Canada", "Group E2"),
-        (date(2026, 6, 14), "Group E3", "Group E4"),
-        (date(2026, 6, 19), "Canada", "Group E3"),
-        (date(2026, 6, 19), "Group E2", "Group E4"),
-        (date(2026, 6, 23), "Group E4", "Canada"),
-        (date(2026, 6, 23), "Group E2", "Group E3"),
+        (date(2026, 6, 14), "Germany", "Curaçao"),
+        (date(2026, 6, 14), "Ecuador", "Ivory Coast"),
+        (date(2026, 6, 20), "Germany", "Ecuador"),
+        (date(2026, 6, 20), "Curaçao", "Ivory Coast"),
+        (date(2026, 6, 25), "Curaçao", "Ecuador"),
+        (date(2026, 6, 25), "Ivory Coast", "Germany"),
     ]
     for d, home, away in group_e_dates:
         matches.append(Match(
@@ -158,14 +156,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group F
+    # Group F: Netherlands, Japan, Sweden, Tunisia
     group_f_dates = [
-        (date(2026, 6, 14), "Group F1", "Group F2"),
-        (date(2026, 6, 15), "Group F3", "Group F4"),
-        (date(2026, 6, 19), "Group F1", "Group F3"),
-        (date(2026, 6, 19), "Group F2", "Group F4"),
-        (date(2026, 6, 23), "Group F4", "Group F1"),
-        (date(2026, 6, 23), "Group F2", "Group F3"),
+        (date(2026, 6, 14), "Netherlands", "Japan"),
+        (date(2026, 6, 14), "Sweden", "Tunisia"),
+        (date(2026, 6, 20), "Netherlands", "Sweden"),
+        (date(2026, 6, 20), "Japan", "Tunisia"),
+        (date(2026, 6, 25), "Japan", "Sweden"),
+        (date(2026, 6, 25), "Tunisia", "Netherlands"),
     ]
     for d, home, away in group_f_dates:
         matches.append(Match(
@@ -179,14 +177,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group G
+    # Group G: Belgium, Egypt, Iran, New Zealand
     group_g_dates = [
-        (date(2026, 6, 15), "Group G1", "Group G2"),
-        (date(2026, 6, 15), "Group G3", "Group G4"),
-        (date(2026, 6, 20), "Group G1", "Group G3"),
-        (date(2026, 6, 20), "Group G2", "Group G4"),
-        (date(2026, 6, 24), "Group G4", "Group G1"),
-        (date(2026, 6, 24), "Group G2", "Group G3"),
+        (date(2026, 6, 15), "Belgium", "Egypt"),
+        (date(2026, 6, 15), "Iran", "New Zealand"),
+        (date(2026, 6, 21), "Belgium", "Iran"),
+        (date(2026, 6, 21), "Egypt", "New Zealand"),
+        (date(2026, 6, 26), "Egypt", "Iran"),
+        (date(2026, 6, 26), "New Zealand", "Belgium"),
     ]
     for d, home, away in group_g_dates:
         matches.append(Match(
@@ -200,14 +198,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group H
+    # Group H: Spain, Cape Verde, Saudi Arabia, Uruguay
     group_h_dates = [
-        (date(2026, 6, 15), "Group H1", "Group H2"),
-        (date(2026, 6, 16), "Group H3", "Group H4"),
-        (date(2026, 6, 20), "Group H1", "Group H3"),
-        (date(2026, 6, 20), "Group H2", "Group H4"),
-        (date(2026, 6, 24), "Group H4", "Group H1"),
-        (date(2026, 6, 24), "Group H2", "Group H3"),
+        (date(2026, 6, 15), "Spain", "Cape Verde"),
+        (date(2026, 6, 15), "Saudi Arabia", "Uruguay"),
+        (date(2026, 6, 21), "Spain", "Saudi Arabia"),
+        (date(2026, 6, 21), "Uruguay", "Cape Verde"),
+        (date(2026, 6, 26), "Cape Verde", "Saudi Arabia"),
+        (date(2026, 6, 26), "Uruguay", "Spain"),
     ]
     for d, home, away in group_h_dates:
         matches.append(Match(
@@ -221,14 +219,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group I
+    # Group I: France, Senegal, Iraq, Norway
     group_i_dates = [
-        (date(2026, 6, 16), "Group I1", "Group I2"),
-        (date(2026, 6, 16), "Group I3", "Group I4"),
-        (date(2026, 6, 21), "Group I1", "Group I3"),
-        (date(2026, 6, 21), "Group I2", "Group I4"),
-        (date(2026, 6, 25), "Group I4", "Group I1"),
-        (date(2026, 6, 25), "Group I2", "Group I3"),
+        (date(2026, 6, 16), "France", "Senegal"),
+        (date(2026, 6, 16), "Iraq", "Norway"),
+        (date(2026, 6, 22), "France", "Iraq"),
+        (date(2026, 6, 22), "Norway", "Senegal"),
+        (date(2026, 6, 26), "Norway", "France"),
+        (date(2026, 6, 26), "Senegal", "Iraq"),
     ]
     for d, home, away in group_i_dates:
         matches.append(Match(
@@ -242,14 +240,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group J
+    # Group J: Argentina, Algeria, Austria, Jordan
     group_j_dates = [
-        (date(2026, 6, 17), "Group J1", "Group J2"),
-        (date(2026, 6, 17), "Group J3", "Group J4"),
-        (date(2026, 6, 22), "Group J1", "Group J3"),
-        (date(2026, 6, 22), "Group J2", "Group J4"),
-        (date(2026, 6, 25), "Group J4", "Group J1"),
-        (date(2026, 6, 25), "Group J2", "Group J3"),
+        (date(2026, 6, 16), "Argentina", "Algeria"),
+        (date(2026, 6, 16), "Austria", "Jordan"),
+        (date(2026, 6, 22), "Argentina", "Austria"),
+        (date(2026, 6, 22), "Jordan", "Algeria"),
+        (date(2026, 6, 27), "Algeria", "Austria"),
+        (date(2026, 6, 27), "Jordan", "Argentina"),
     ]
     for d, home, away in group_j_dates:
         matches.append(Match(
@@ -263,14 +261,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group K
+    # Group K: Portugal, DR Congo, Uzbekistan, Colombia
     group_k_dates = [
-        (date(2026, 6, 18), "Group K1", "Group K2"),
-        (date(2026, 6, 18), "Group K3", "Group K4"),
-        (date(2026, 6, 23), "Group K1", "Group K3"),
-        (date(2026, 6, 23), "Group K2", "Group K4"),
-        (date(2026, 6, 26), "Group K4", "Group K1"),
-        (date(2026, 6, 26), "Group K2", "Group K3"),
+        (date(2026, 6, 17), "Portugal", "DR Congo"),
+        (date(2026, 6, 17), "Uzbekistan", "Colombia"),
+        (date(2026, 6, 23), "Portugal", "Uzbekistan"),
+        (date(2026, 6, 23), "Colombia", "DR Congo"),
+        (date(2026, 6, 27), "Colombia", "Portugal"),
+        (date(2026, 6, 27), "DR Congo", "Uzbekistan"),
     ]
     for d, home, away in group_k_dates:
         matches.append(Match(
@@ -284,14 +282,14 @@ def get_group_stage_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Group L
+    # Group L: England, Croatia, Ghana, Panama
     group_l_dates = [
-        (date(2026, 6, 18), "Group L1", "Group L2"),
-        (date(2026, 6, 19), "Group L3", "Group L4"),
-        (date(2026, 6, 23), "Group L1", "Group L3"),
-        (date(2026, 6, 24), "Group L2", "Group L4"),
-        (date(2026, 6, 26), "Group L4", "Group L1"),
-        (date(2026, 6, 26), "Group L2", "Group L3"),
+        (date(2026, 6, 17), "England", "Croatia"),
+        (date(2026, 6, 17), "Ghana", "Panama"),
+        (date(2026, 6, 23), "England", "Ghana"),
+        (date(2026, 6, 23), "Panama", "Croatia"),
+        (date(2026, 6, 27), "Panama", "England"),
+        (date(2026, 6, 27), "Croatia", "Ghana"),
     ]
     for d, home, away in group_l_dates:
         matches.append(Match(
