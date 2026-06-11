@@ -57,7 +57,7 @@ A complete fantasy draft system for the FIFA 2026 World Cup with a real-time web
 - Python 3.11+
 - Google Cloud service account with Sheets API enabled ([Setup Guide](docs/SETUP_GOOGLE_SHEETS.md))
 - football-data.org API key ([Register Free](https://www.football-data.org/client/register))
-- OpenAI API key (for fallback scoring)
+- OpenAI API key (**optional** — only needed for LLM validation and fallback scoring)
 
 ### 2. Install Dependencies
 ```bash
@@ -72,7 +72,7 @@ cp .env.example .env
 #   - GOOGLE_SHEETS_ID
 #   - GOOGLE_SHEETS_CREDENTIALS_JSON (or _FILE for local dev)
 #   - FOOTBALL_API_KEY
-#   - OPENAI_API_KEY
+#   - OPENAI_API_KEY (optional - for LLM validation)
 ```
 
 ### 4. Seed the Google Sheet (run once)
@@ -184,13 +184,13 @@ python -m src.main
 | Source | Type | Usage | Rate Limit |
 |--------|------|-------|------------|
 | **football-data.org** | REST API | Primary match scores | 10 req/min (free tier) |
-| **OpenAI GPT-4o-mini** | LLM | Fallback when API fails | ~$0.01/query |
+| **OpenAI GPT-4o-mini** | LLM | Fallback when API fails (optional) | ~$0.01/query |
 | **Google Sheets** | Spreadsheet | Source of truth (backend) | No limit (service account) |
 
 **Sync Flow:**
 1. Check which matches need updating (based on date + state file)
 2. Try football-data.org API first
-3. If API fails → fall back to ChatGPT (structured prompt)
+3. If API fails and OpenAI key is configured → fall back to ChatGPT (structured prompt)
 4. Reconcile and update Google Sheets
 5. Persist state to `state/last_sync.json` for crash recovery
 
@@ -206,11 +206,14 @@ The app runs daily integrity checks after each sync to catch scoring bugs:
 - ✅ Group stage vs knockout multipliers applied correctly
 - ✅ No duplicate matches or missing match IDs
 - ✅ All players have 10 teams drafted
+- ✅ **LLM fact-checking** (if OpenAI API key is configured)
 
 Results are logged to the **Validation Log** tab in Google Sheets with:
 - Timestamp
 - Pass/Fail status
 - Detailed error descriptions (if any)
+
+**Note:** LLM validation is optional and only runs if `OPENAI_API_KEY` is set. The structural checks (match count, point calculations, etc.) always run regardless.
 
 **Trigger manually:**
 ```bash
@@ -231,7 +234,7 @@ Results are logged to the **Validation Log** tab in Google Sheets with:
    GOOGLE_SHEETS_ID=your_spreadsheet_id
    GOOGLE_SHEETS_CREDENTIALS_JSON={"type":"service_account",...}
    FOOTBALL_API_KEY=your_key
-   OPENAI_API_KEY=sk-...
+   OPENAI_API_KEY=sk-...  # Optional: for LLM validation
    SYNC_HOUR=6
    SYNC_MINUTE=0
    DASHBOARD_URL=https://your-app-name.onrender.com  # Optional: for share messages
@@ -333,7 +336,7 @@ tests/
 | `GOOGLE_SHEETS_CREDENTIALS_JSON` | ✅ Yes* | — | Full JSON service account (Render/hosted) |
 | `GOOGLE_SHEETS_CREDENTIALS_FILE` | ✅ Yes* | `credentials.json` | Path to credentials (local dev) |
 | `FOOTBALL_API_KEY` | ✅ Yes | — | football-data.org API key |
-| `OPENAI_API_KEY` | ✅ Yes | — | OpenAI API key for fallback |
+| `OPENAI_API_KEY` | ⚠️ Optional | — | OpenAI API key for LLM validation & fallback |
 | `OPENAI_MODEL` | No | `gpt-4o-mini` | ChatGPT model to use |
 | `SYNC_HOUR` | No | `6` | Daily sync time (0-23) |
 | `SYNC_MINUTE` | No | `0` | Daily sync minute (0-59) |

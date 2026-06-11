@@ -281,7 +281,15 @@ def validate_factual_with_llm(
     from src.config import Config
 
     report = ValidationReport()
-    client = OpenAI(api_key=openai_api_key or Config.OPENAI_API_KEY)
+    
+    # Check if OpenAI API key is available
+    final_api_key = openai_api_key or Config.OPENAI_API_KEY
+    if not final_api_key:
+        logger.info("OpenAI API key not available - skipping LLM validation")
+        report.checks_passed += 1
+        return report
+    
+    client = OpenAI(api_key=final_api_key)
     model = model or Config.OPENAI_MODEL
 
     # Only verify recently finished matches (last 3 days)

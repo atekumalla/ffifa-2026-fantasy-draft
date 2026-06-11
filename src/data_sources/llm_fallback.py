@@ -46,8 +46,15 @@ class LLMFallback:
     """ChatGPT-based fallback for match score retrieval."""
 
     def __init__(self, api_key: str | None = None, model: str | None = None):
-        self.client = OpenAI(api_key=api_key or Config.OPENAI_API_KEY)
-        self.model = model or Config.OPENAI_MODEL
+        # Make OpenAI API key optional - only initialize client if key is available
+        final_api_key = api_key or Config.OPENAI_API_KEY
+        if not final_api_key:
+            self.client = None
+            self.model = None
+            logger.warning("OpenAI API key not provided - LLM fallback disabled")
+        else:
+            self.client = OpenAI(api_key=final_api_key)
+            self.model = model or Config.OPENAI_MODEL
 
     @retry(stop=stop_after_attempt(2), wait=wait_fixed(3))
     def fetch_match_results(
@@ -63,6 +70,10 @@ class LLMFallback:
         Returns:
             List of Match objects with scores filled in.
         """
+        if self.client is None:
+            logger.warning("LLM fallback disabled - no OpenAI API key configured")
+            return []
+        
         # Build the user prompt
         user_prompt = f"What are the FIFA World Cup 2026 match results for {match_date.strftime('%B %d, %Y')}?"
 
@@ -92,6 +103,10 @@ class LLMFallback:
         self, home_team: str, away_team: str, match_date: date
     ) -> Optional[Match]:
         """Query ChatGPT for a specific match result."""
+        if self.client is None:
+            logger.warning("LLM fallback disabled - no OpenAI API key configured")
+            return None
+        
         user_prompt = (
             f"What was the final score of {home_team} vs {away_team} "
             f"in the FIFA World Cup 2026 on {match_date.strftime('%B %d, %Y')}? "

@@ -1,5 +1,6 @@
 """Application configuration loaded from environment variables."""
 
+import logging
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -7,6 +8,8 @@ from dotenv import load_dotenv
 # Load .env from project root (only used in local dev, ignored on Render)
 _project_root = Path(__file__).resolve().parent.parent
 load_dotenv(_project_root / ".env")
+
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -88,7 +91,8 @@ class Config:
                 )
         if not cls.FOOTBALL_API_KEY:
             errors.append("FOOTBALL_API_KEY is not set (needed for primary data source)")
+        # OpenAI API key is now optional
         if not cls.OPENAI_API_KEY:
-            errors.append("OPENAI_API_KEY is not set (needed for LLM fallback)")
+            logger.warning("OPENAI_API_KEY is not set (LLM fallback and validation will be disabled)")
         return errors
 
