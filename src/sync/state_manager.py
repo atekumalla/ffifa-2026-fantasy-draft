@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -64,7 +64,7 @@ class StateManager:
 
     def mark_synced(self):
         """Record that a sync just completed."""
-        now = datetime.now().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         self.state["last_sync"] = now
         self.state["last_updated"] = now
         self.state["sync_count"] = self.state.get("sync_count", 0) + 1
@@ -85,7 +85,7 @@ class StateManager:
         """Record the last error for debugging."""
         self.state["last_error"] = {
             "message": error,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         self.save()
 
