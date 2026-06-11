@@ -273,12 +273,22 @@ async def get_status():
     # Upcoming matches (next 5)
     upcoming = [m for m in matches if m.status == MatchStatus.SCHEDULED]
     upcoming.sort(key=lambda m: m.match_date)
+    
+    # Build a mapping of team -> player name
+    team_to_player = {}
+    for player in players:
+        for team in player.teams:
+            team_to_player[team] = player.name
+    
     upcoming_matches = [
         {
             "date": m.match_date.isoformat(),
             "home_team": m.home_team,
             "away_team": m.away_team,
             "stage": m.stage.value,
+            "group": m.group,
+            "home_player": team_to_player.get(m.home_team),
+            "away_player": team_to_player.get(m.away_team),
         }
         for m in upcoming[:5]
     ]

@@ -81,6 +81,8 @@ table{border-collapse:collapse;width:100%}
 .match-team{font-family:var(--font-display);font-weight:700;font-size:var(--text-sm);display:flex;align-items:center;gap:var(--space-1)}
 .match-score{font-family:var(--font-display);font-size:var(--text-lg);font-weight:800;min-width:60px;text-align:center}
 .match-score.tbd{color:var(--color-text-muted);font-size:var(--text-sm)}
+.match-player-badges{display:flex;gap:var(--space-1);align-items:center}
+.match-player-badge{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:.65rem;font-weight:800;color:#fff;border:1px solid rgba(255,255,255,.3)}
 .recent-table thead th{font-family:var(--font-display);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;color:var(--color-text-muted);padding:var(--space-2) var(--space-3);border-bottom:2px solid var(--color-divider);text-align:center}
 .recent-table thead th:first-child{text-align:left}
 .recent-table tbody td{padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--color-divider);font-size:var(--text-sm);text-align:center;font-variant-numeric:tabular-nums}
@@ -222,8 +224,8 @@ const PLAYER_COLORS = ['#d97706','#2563eb','#dc2626','#7c3aed'];
 const RANK_CLASSES = ['rank-1','rank-2','rank-3','rank-4'];
 const RANK_LABELS = ['\u{1F947} 1st','\u{1F948} 2nd','\u{1F949} 3rd','4th'];
 
-const FLAGS = {"Argentina":"\u{1F1E6}\u{1F1F7}","Australia":"\u{1F1E6}\u{1F1FA}","Austria":"\u{1F1E6}\u{1F1F9}","Algeria":"\u{1F1E9}\u{1F1FF}","Belgium":"\u{1F1E7}\u{1F1EA}","Bosnia & Herzegovina":"\u{1F1E7}\u{1F1E6}","Brazil":"\u{1F1E7}\u{1F1F7}","Cameroon":"\u{1F1E8}\u{1F1F2}","Canada":"\u{1F1E8}\u{1F1E6}","Chile":"\u{1F1E8}\u{1F1F1}","Colombia":"\u{1F1E8}\u{1F1F4}","Congo":"\u{1F1E8}\u{1F1EC}","Croatia":"\u{1F1ED}\u{1F1F7}","Czechia":"\u{1F1E8}\u{1F1FF}","Denmark":"\u{1F1E9}\u{1F1F0}","Ecuador":"\u{1F1EA}\u{1F1E8}","Egypt":"\u{1F1EA}\u{1F1EC}","England":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}","France":"\u{1F1EB}\u{1F1F7}","Germany":"\u{1F1E9}\u{1F1EA}","Ghana":"\u{1F1EC}\u{1F1ED}","Iran":"\u{1F1EE}\u{1F1F7}","Ivory Coast":"\u{1F1E8}\u{1F1EE}","Jamaica":"\u{1F1EF}\u{1F1F2}","Japan":"\u{1F1EF}\u{1F1F5}","Mexico":"\u{1F1F2}\u{1F1FD}","Morocco":"\u{1F1F2}\u{1F1E6}","Netherlands":"\u{1F1F3}\u{1F1F1}","New Zealand":"\u{1F1F3}\u{1F1FF}","Nigeria":"\u{1F1F3}\u{1F1EC}","Norway":"\u{1F1F3}\u{1F1F4}","Paraguay":"\u{1F1F5}\u{1F1FE}","Peru":"\u{1F1F5}\u{1F1EA}","Portugal":"\u{1F1F5}\u{1F1F9}","Qatar":"\u{1F1F6}\u{1F1E6}","Saudi Arabia":"\u{1F1F8}\u{1F1E6}","Scotland":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}","Senegal":"\u{1F1F8}\u{1F1F3}","Serbia":"\u{1F1F7}\u{1F1F8}","South Africa":"\u{1F1FF}\u{1F1E6}","South Korea":"\u{1F1F0}\u{1F1F7}","Spain":"\u{1F1EA}\u{1F1F8}","Sweden":"\u{1F1F8}\u{1F1EA}","Switzerland":"\u{1F1E8}\u{1F1ED}","Tunisia":"\u{1F1F9}\u{1F1F3}","Turkey":"\u{1F1F9}\u{1F1F7}","Uruguay":"\u{1F1FA}\u{1F1FE}","USA":"\u{1F1FA}\u{1F1F8}"};
-const ABBREV = {"Argentina":"ARG","Australia":"AUS","Austria":"AUT","Algeria":"ALG","Belgium":"BEL","Bosnia & Herzegovina":"BIH","Brazil":"BRA","Cameroon":"CMR","Canada":"CAN","Chile":"CHI","Colombia":"COL","Congo":"CGO","Croatia":"CRO","Czechia":"CZE","Denmark":"DEN","Ecuador":"ECU","Egypt":"EGY","England":"ENG","France":"FRA","Germany":"GER","Ghana":"GHA","Iran":"IRN","Ivory Coast":"CIV","Jamaica":"JAM","Japan":"JPN","Mexico":"MEX","Morocco":"MAR","Netherlands":"NED","New Zealand":"NZL","Nigeria":"NGA","Norway":"NOR","Paraguay":"PAR","Peru":"PER","Portugal":"POR","Qatar":"QAT","Saudi Arabia":"KSA","Scotland":"SCO","Senegal":"SEN","Serbia":"SRB","South Africa":"RSA","South Korea":"KOR","Spain":"ESP","Sweden":"SWE","Switzerland":"SUI","Tunisia":"TUN","Turkey":"TUR","Uruguay":"URU","USA":"USA"};
+const FLAGS = {"Argentina":"\u{1F1E6}\u{1F1F7}","Australia":"\u{1F1E6}\u{1F1FA}","Austria":"\u{1F1E6}\u{1F1F9}","Algeria":"\u{1F1E9}\u{1F1FF}","Belgium":"\u{1F1E7}\u{1F1EA}","Bosnia & Herzegovina":"\u{1F1E7}\u{1F1E6}","Bosnia and Herzegovina":"\u{1F1E7}\u{1F1E6}","Brazil":"\u{1F1E7}\u{1F1F7}","Cameroon":"\u{1F1E8}\u{1F1F2}","Canada":"\u{1F1E8}\u{1F1E6}","Chile":"\u{1F1E8}\u{1F1F1}","Colombia":"\u{1F1E8}\u{1F1F4}","Congo":"\u{1F1E8}\u{1F1EC}","Croatia":"\u{1F1ED}\u{1F1F7}","Czech Republic":"\u{1F1E8}\u{1F1FF}","Czechia":"\u{1F1E8}\u{1F1FF}","Denmark":"\u{1F1E9}\u{1F1F0}","Ecuador":"\u{1F1EA}\u{1F1E8}","Egypt":"\u{1F1EA}\u{1F1EC}","England":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}","France":"\u{1F1EB}\u{1F1F7}","Germany":"\u{1F1E9}\u{1F1EA}","Ghana":"\u{1F1EC}\u{1F1ED}","Iran":"\u{1F1EE}\u{1F1F7}","Ivory Coast":"\u{1F1E8}\u{1F1EE}","Jamaica":"\u{1F1EF}\u{1F1F2}","Japan":"\u{1F1EF}\u{1F1F5}","Mexico":"\u{1F1F2}\u{1F1FD}","Morocco":"\u{1F1F2}\u{1F1E6}","Netherlands":"\u{1F1F3}\u{1F1F1}","New Zealand":"\u{1F1F3}\u{1F1FF}","Nigeria":"\u{1F1F3}\u{1F1EC}","Norway":"\u{1F1F3}\u{1F1F4}","Paraguay":"\u{1F1F5}\u{1F1FE}","Peru":"\u{1F1F5}\u{1F1EA}","Portugal":"\u{1F1F5}\u{1F1F9}","Qatar":"\u{1F1F6}\u{1F1E6}","Saudi Arabia":"\u{1F1F8}\u{1F1E6}","Scotland":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}","Senegal":"\u{1F1F8}\u{1F1F3}","Serbia":"\u{1F1F7}\u{1F1F8}","South Africa":"\u{1F1FF}\u{1F1E6}","South Korea":"\u{1F1F0}\u{1F1F7}","Spain":"\u{1F1EA}\u{1F1F8}","Sweden":"\u{1F1F8}\u{1F1EA}","Switzerland":"\u{1F1E8}\u{1F1ED}","Tunisia":"\u{1F1F9}\u{1F1F3}","Turkey":"\u{1F1F9}\u{1F1F7}","Uruguay":"\u{1F1FA}\u{1F1FE}","USA":"\u{1F1FA}\u{1F1F8}"};
+const ABBREV = {"Argentina":"ARG","Australia":"AUS","Austria":"AUT","Algeria":"ALG","Belgium":"BEL","Bosnia & Herzegovina":"BIH","Bosnia and Herzegovina":"BIH","Brazil":"BRA","Cameroon":"CMR","Canada":"CAN","Chile":"CHI","Colombia":"COL","Congo":"CGO","Croatia":"CRO","Czech Republic":"CZE","Czechia":"CZE","Denmark":"DEN","Ecuador":"ECU","Egypt":"EGY","England":"ENG","France":"FRA","Germany":"GER","Ghana":"GHA","Iran":"IRN","Ivory Coast":"CIV","Jamaica":"JAM","Japan":"JPN","Mexico":"MEX","Morocco":"MAR","Netherlands":"NED","New Zealand":"NZL","Nigeria":"NGA","Norway":"NOR","Paraguay":"PAR","Peru":"PER","Portugal":"POR","Qatar":"QAT","Saudi Arabia":"KSA","Scotland":"SCO","Senegal":"SEN","Serbia":"SRB","South Africa":"RSA","South Korea":"KOR","Spain":"ESP","Sweden":"SWE","Switzerland":"SUI","Tunisia":"TUN","Turkey":"TUR","Uruguay":"URU","USA":"USA"};
 function flag(team) { return FLAGS[team] || '\u{1F3F3}\u{FE0F}'; }
 function abbr(team) { return ABBREV[team] || team.substring(0,3).toUpperCase(); }
 
@@ -336,17 +338,36 @@ function renderDashboard(data) {
     });
   }
 
-  // Upcoming matches with flags, group, and date
+  // Upcoming matches with flags, group, date, and player indicators
   var upList = document.getElementById('upcomingList');
   upList.innerHTML = '';
   if (upcoming_matches.length === 0) {
     upList.innerHTML = '<p style="color:var(--color-text-muted)">No upcoming matches</p>';
   } else {
     upcoming_matches.forEach(function(m) {
-      var dt = new Date(m.date);
+      // Parse date as local date (not UTC) to avoid timezone issues
+      var parts = m.date.split('-');
+      var dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
       var dateStr = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       var groupLabel = m.group ? 'Group ' + m.group : m.stage.replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
-      upList.innerHTML += '<div class="match-card"><div class="match-meta"><span>' + groupLabel + '</span><span>' + dateStr + '</span></div><div class="match-teams"><span class="match-team">' + flag(m.home_team) + ' ' + m.home_team + '</span><span class="match-score tbd">VS</span><span class="match-team">' + flag(m.away_team) + ' ' + m.away_team + '</span></div></div>';
+      
+      // Build player indicators for home and away teams
+      var homePlayerBadge = '';
+      var awayPlayerBadge = '';
+      
+      if (m.home_player) {
+        var playerIndex = leaderboard.findIndex(function(p) { return p.name === m.home_player; });
+        var color = PLAYER_COLORS[playerIndex] || PLAYER_COLORS[3];
+        homePlayerBadge = '<span class="match-player-badge" style="background:' + color + '" title="' + m.home_player + '">' + m.home_player[0] + '</span>';
+      }
+      
+      if (m.away_player) {
+        var playerIndex = leaderboard.findIndex(function(p) { return p.name === m.away_player; });
+        var color = PLAYER_COLORS[playerIndex] || PLAYER_COLORS[3];
+        awayPlayerBadge = '<span class="match-player-badge" style="background:' + color + '" title="' + m.away_player + '">' + m.away_player[0] + '</span>';
+      }
+      
+      upList.innerHTML += '<div class="match-card"><div class="match-meta"><span>' + groupLabel + '</span><span>' + dateStr + '</span></div><div class="match-teams"><span class="match-team"><div class="match-player-badges">' + homePlayerBadge + '</div>' + flag(m.home_team) + ' ' + m.home_team + '</span><span class="match-score tbd">VS</span><span class="match-team">' + flag(m.away_team) + ' ' + m.away_team + '<div class="match-player-badges">' + awayPlayerBadge + '</div></span></div></div>';
     });
   }
 
@@ -366,7 +387,9 @@ function renderWormChart(worm_data, leaderboard) {
     };
   });
   var dates = (worm_data.dates || []).map(function(d) {
-    var dt = new Date(d);
+    // Parse date as local date (not UTC) to avoid timezone issues
+    var parts = d.split('-');
+    var dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
   wormChart = new Chart(ctx, {
