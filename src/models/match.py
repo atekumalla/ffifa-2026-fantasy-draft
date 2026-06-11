@@ -55,7 +55,13 @@ class Match(BaseModel):
 
     @property
     def is_played(self) -> bool:
+        """Match is finished."""
         return self.status == MatchStatus.FINISHED
+
+    @property
+    def is_live_or_finished(self) -> bool:
+        """Match is currently in play or has finished."""
+        return self.status in (MatchStatus.IN_PLAY, MatchStatus.FINISHED)
 
     @property
     def home_goals_regular(self) -> int:

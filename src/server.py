@@ -253,9 +253,16 @@ async def get_status():
 
     leaderboard.sort(key=lambda x: x["total_points"], reverse=True)
 
-    # Recent finished matches (last 10)
-    finished = [m for m in matches if m.is_played]
+    # Recent finished/live matches (last 10)
+    finished = [m for m in matches if m.is_live_or_finished]
     finished.sort(key=lambda m: m.match_date, reverse=True)
+    
+    # Build a mapping of team -> player name
+    team_to_player = {}
+    for player in players:
+        for team in player.teams:
+            team_to_player[team] = player.name
+    
     recent_matches = []
     for m in finished[:10]:
         pts = calculator.calculate_match_points(m)
@@ -265,20 +272,17 @@ async def get_status():
             "away_team": m.away_team,
             "home_goals": m.home_goals,
             "away_goals": m.away_goals,
+            "status": m.status.value,  # Include status for live indicator
             "stage": m.stage.value,
             "home_points": pts.get(m.home_team, 0),
             "away_points": pts.get(m.away_team, 0),
+            "home_player": team_to_player.get(m.home_team),
+            "away_player": team_to_player.get(m.away_team),
         })
 
     # Upcoming matches (next 5)
     upcoming = [m for m in matches if m.status == MatchStatus.SCHEDULED]
     upcoming.sort(key=lambda m: m.match_date)
-    
-    # Build a mapping of team -> player name
-    team_to_player = {}
-    for player in players:
-        for team in player.teams:
-            team_to_player[team] = player.name
     
     upcoming_matches = [
         {
