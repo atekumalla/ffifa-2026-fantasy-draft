@@ -324,7 +324,23 @@ function renderDashboard(data) {
     recentTbody.innerHTML = '<tr><td colspan="' + (2 + orderedPlayers.length) + '" style="text-align:center;color:var(--color-text-muted)">No matches played yet</td></tr>';
   } else {
     recent_matches.forEach(function(m) {
-      var row = '<td>' + flag(m.home_team) + ' ' + abbr(m.home_team) + ' vs ' + flag(m.away_team) + ' ' + abbr(m.away_team) + '</td>';
+      // Build player badges for home and away teams
+      var homePlayerBadge = '';
+      var awayPlayerBadge = '';
+      
+      if (m.home_player) {
+        var playerIndex = leaderboard.findIndex(function(p) { return p.name === m.home_player; });
+        var color = PLAYER_COLORS[playerIndex] || PLAYER_COLORS[3];
+        homePlayerBadge = '<span class="match-player-badge" style="background:' + color + '" title="' + m.home_player + '">' + m.home_player[0] + '</span>';
+      }
+      
+      if (m.away_player) {
+        var playerIndex = leaderboard.findIndex(function(p) { return p.name === m.away_player; });
+        var color = PLAYER_COLORS[playerIndex] || PLAYER_COLORS[3];
+        awayPlayerBadge = '<span class="match-player-badge" style="background:' + color + '" title="' + m.away_player + '">' + m.away_player[0] + '</span>';
+      }
+      
+      var row = '<td><span style="display:inline-flex;align-items:center;gap:4px">' + homePlayerBadge + flag(m.home_team) + ' ' + abbr(m.home_team) + '</span> vs <span style="display:inline-flex;align-items:center;gap:4px">' + flag(m.away_team) + ' ' + abbr(m.away_team) + awayPlayerBadge + '</span></td>';
       row += '<td class="score-cell">' + m.home_goals + ' \u2013 ' + m.away_goals + '</td>';
       orderedPlayers.forEach(function(name) {
         var pp = m.player_points ? m.player_points[name] : null;
