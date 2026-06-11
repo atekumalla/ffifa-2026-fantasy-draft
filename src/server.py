@@ -514,7 +514,7 @@ def _calculate_worm_data(
     calculator: ScoringCalculator,
 ) -> dict:
     """Calculate cumulative points by date for the score worm chart."""
-    from datetime import date as dt_date
+    from datetime import date as dt_date, timedelta
 
     finished = [m for m in matches if m.is_played]
     if not finished:
@@ -524,6 +524,11 @@ def _calculate_worm_data(
 
     # Get all unique match dates
     all_dates = sorted(set(m.match_date for m in finished))
+    
+    # Add a starting point (one day before first match) where everyone has 0 points
+    if all_dates:
+        start_date = all_dates[0] - timedelta(days=1)
+        all_dates = [start_date] + all_dates
 
     # Calculate cumulative points per player per date
     player_cumulative: dict[str, list[float]] = {p.name: [] for p in players}
