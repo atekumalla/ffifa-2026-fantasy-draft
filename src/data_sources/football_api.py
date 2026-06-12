@@ -29,6 +29,14 @@ _STAGE_MAP = {
     "FINAL": MatchStage.FINAL,
 }
 
+# Mapping API country names to our internal names
+# The API may use different naming conventions than our seed data
+_COUNTRY_NAME_MAP = {
+    "Czechia": "Czech Republic",
+    "Korea Republic": "South Korea",
+    # Add other mappings as needed
+}
+
 _STATUS_MAP = {
     "SCHEDULED": MatchStatus.SCHEDULED,
     "TIMED": MatchStatus.SCHEDULED,
@@ -38,6 +46,19 @@ _STATUS_MAP = {
     "POSTPONED": MatchStatus.POSTPONED,
     "CANCELLED": MatchStatus.POSTPONED,
 }
+
+
+def _normalize_team_name(api_name: str) -> str:
+    """Normalize team names from the API to match our internal conventions.
+    
+    Args:
+        api_name: Team name as returned by the API
+        
+    Returns:
+        Normalized team name matching our seed data
+    """
+    return _COUNTRY_NAME_MAP.get(api_name, api_name)
+
 
 
 class FootballDataAPI:
@@ -82,6 +103,47 @@ class FootballDataAPI:
         params = {"status": "FINISHED"}
         data = self._get(f"competitions/{self.competition}/matches", params=params)
         return self._parse_matches(data.get("matches", []))
+    
+    def fetch_live_and_finished_matches(self) -> list[Match]:
+        """Fetch live (in-play) and finished matches."""
+        logger.info(f"Fetching live and finished matches (today: {date.today()})")
+        
+        all_matches = {}
+        
+        # Fetch today's matches (all statuses for today)
+        today_matches = self.fetch_todays_matches()
+        logger.info(f"Today's matches: {len(today_matches)} total")
+        for m in today_matches:
+            logger.info(f"  - {m.home_team} vs {m.away_team}: {m.status.value} (ID: {m.match_id}, Date: {m.match_date})")
+            all_matches[m.match_id] = m
+        
+        # Fetch finished matches to catch any from recent days
+        finished_matches = self.fetch_finished_matches()
+        logger.info(f"Finished matches (by status): {len(finished_matches)} total")
+        for m in finished_matches:
+            if m.match_id not in all_matches:
+                logger.info(f"  - {m.home_team} vs {m.away_team}: {m.status.value} (ID: {m.match_id}, Date: {m.match_date})")
+            all_matches[m.match_id] = m
+        
+        # Also try fetching by status=IN_PLAY to catch live matches
+        try:
+            params = {"status": "IN_PLAY"}
+            data = self._get(f"competitions/{self.competition}/matches", params=params)
+            live_matches = self._parse_matches(data.get("matches", []))
+            logger.info(f"Live matches (by status): {len(live_matches)} total")
+            for m in live_matches:
+                logger.info(f"  - {m.home_team} vs {m.away_team}: {m.status.value} (ID: {m.match_id}, Date: {m.match_date})")
+                all_matches[m.match_id] = m  # Live data takes precedence
+        except Exception as e:
+            logger.warning(f"Failed to fetch IN_PLAY matches: {e}")
+        
+        # Combine and deduplicate by match_id
+        for m in today_matches:
+            all_matches[m.match_id] = m  # Today's data takes precedence
+        
+        result = list(all_matches.values())
+        logger.info(f"Combined result: {len(result)} matches")
+        return result
 
     def fetch_todays_matches(self) -> list[Match]:
         """Fetch today's matches."""
@@ -118,8 +180,19 @@ class FootballDataAPI:
         status = _STATUS_MAP.get(status_str, MatchStatus.SCHEDULED)
 
         # Parse teams
-        home_team = m.get("homeTeam", {}).get("name", "TBD")
-        away_team = m.get("awayTeam", {}).get("name", "TBD")
+        home_team_raw = m.get("homeTeam", {}).get("name", "TBD")
+        away_team_raw = m.get("awayTeam", {}).get("name", "TBD")
+        
+        # Normalize team names to match our internal conventions
+        home_team = _normalize_team_name(home_team_raw)
+        away_team = _normalize_team_name(away_team_raw)
+        
+        # Log any name translations for debugging
+        if home_team != home_team_raw or away_team != away_team_raw:
+            logger.info(
+                f"Team name translation: '{home_team_raw}' -> '{home_team}', "
+                f"'{away_team_raw}' -> '{away_team}' (Status: {status_str})"
+            )
 
         # Parse group
         group = m.get("group", "")

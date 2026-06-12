@@ -580,8 +580,8 @@ def _do_sync(state: dict):
     # Try API first
     updated = []
     try:
-        updated = football_api.fetch_finished_matches()
-        logger.info(f"API returned {len(updated)} finished matches")
+        updated = football_api.fetch_live_and_finished_matches()
+        logger.info(f"API returned {len(updated)} live/finished matches")
     except Exception as e:
         logger.warning(f"Football API failed: {e}")
 

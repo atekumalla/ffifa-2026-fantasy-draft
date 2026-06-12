@@ -77,8 +77,8 @@ def reconcile_matches(
         key = _match_key(sheet_match)
         if key in api_index:
             api_match = api_index[key]
-            # If API says finished, take API data
-            if api_match.status == MatchStatus.FINISHED:
+            # If API says finished or in-play, take API data (it's more current)
+            if api_match.status in (MatchStatus.FINISHED, MatchStatus.IN_PLAY):
                 reconciled.append(api_match)
             else:
                 reconciled.append(sheet_match)
