@@ -95,6 +95,11 @@ def reconcile_matches(
 
 
 def _match_key(match: Match) -> str:
-    """Create a lookup key for a match (date + teams)."""
+    """Create a lookup key for a match (stage + teams, ignoring date due to timezone differences).
+    
+    The Football API may return matches with UTC dates that differ from local timezone dates,
+    causing the same match to be keyed differently. Using stage + team names ensures proper
+    matching while allowing the same teams to play in different stages (e.g., group vs knockout).
+    """
     teams = sorted([match.home_team.lower(), match.away_team.lower()])
-    return f"{match.match_date}_{teams[0]}_{teams[1]}"
+    return f"{match.stage.value}_{teams[0]}_{teams[1]}"
