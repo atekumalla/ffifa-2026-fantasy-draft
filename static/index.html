@@ -227,6 +227,18 @@ const PLAYER_COLORS = ['#d97706','#2563eb','#dc2626','#7c3aed'];
 const RANK_CLASSES = ['rank-1','rank-2','rank-3','rank-4'];
 const RANK_LABELS = ['\u{1F947} 1st','\u{1F948} 2nd','\u{1F949} 3rd','4th'];
 
+// Player name to badge initials mapping
+const PLAYER_INITIALS = {
+  'Anup': 'AG',
+  'Rohit': 'RD',
+  'Abhinav': 'AT',
+  'Prateik': 'PP'
+};
+
+function getPlayerInitials(playerName) {
+  return PLAYER_INITIALS[playerName] || playerName.substring(0, 2).toUpperCase();
+}
+
 const FLAGS = {"Argentina":"\u{1F1E6}\u{1F1F7}","Australia":"\u{1F1E6}\u{1F1FA}","Austria":"\u{1F1E6}\u{1F1F9}","Algeria":"\u{1F1E9}\u{1F1FF}","Belgium":"\u{1F1E7}\u{1F1EA}","Bosnia & Herzegovina":"\u{1F1E7}\u{1F1E6}","Bosnia and Herzegovina":"\u{1F1E7}\u{1F1E6}","Brazil":"\u{1F1E7}\u{1F1F7}","Cameroon":"\u{1F1E8}\u{1F1F2}","Canada":"\u{1F1E8}\u{1F1E6}","Chile":"\u{1F1E8}\u{1F1F1}","Colombia":"\u{1F1E8}\u{1F1F4}","Congo":"\u{1F1E8}\u{1F1EC}","Croatia":"\u{1F1ED}\u{1F1F7}","Czech Republic":"\u{1F1E8}\u{1F1FF}","Czechia":"\u{1F1E8}\u{1F1FF}","Denmark":"\u{1F1E9}\u{1F1F0}","Ecuador":"\u{1F1EA}\u{1F1E8}","Egypt":"\u{1F1EA}\u{1F1EC}","England":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0065}\u{E006E}\u{E0067}\u{E007F}","France":"\u{1F1EB}\u{1F1F7}","Germany":"\u{1F1E9}\u{1F1EA}","Ghana":"\u{1F1EC}\u{1F1ED}","Iran":"\u{1F1EE}\u{1F1F7}","Ivory Coast":"\u{1F1E8}\u{1F1EE}","Jamaica":"\u{1F1EF}\u{1F1F2}","Japan":"\u{1F1EF}\u{1F1F5}","Mexico":"\u{1F1F2}\u{1F1FD}","Morocco":"\u{1F1F2}\u{1F1E6}","Netherlands":"\u{1F1F3}\u{1F1F1}","New Zealand":"\u{1F1F3}\u{1F1FF}","Nigeria":"\u{1F1F3}\u{1F1EC}","Norway":"\u{1F1F3}\u{1F1F4}","Paraguay":"\u{1F1F5}\u{1F1FE}","Peru":"\u{1F1F5}\u{1F1EA}","Portugal":"\u{1F1F5}\u{1F1F9}","Qatar":"\u{1F1F6}\u{1F1E6}","Saudi Arabia":"\u{1F1F8}\u{1F1E6}","Scotland":"\u{1F3F4}\u{E0067}\u{E0062}\u{E0073}\u{E0063}\u{E0074}\u{E007F}","Senegal":"\u{1F1F8}\u{1F1F3}","Serbia":"\u{1F1F7}\u{1F1F8}","South Africa":"\u{1F1FF}\u{1F1E6}","South Korea":"\u{1F1F0}\u{1F1F7}","Spain":"\u{1F1EA}\u{1F1F8}","Sweden":"\u{1F1F8}\u{1F1EA}","Switzerland":"\u{1F1E8}\u{1F1ED}","Tunisia":"\u{1F1F9}\u{1F1F3}","Turkey":"\u{1F1F9}\u{1F1F7}","Uruguay":"\u{1F1FA}\u{1F1FE}","USA":"\u{1F1FA}\u{1F1F8}"};
 const ABBREV = {"Argentina":"ARG","Australia":"AUS","Austria":"AUT","Algeria":"ALG","Belgium":"BEL","Bosnia & Herzegovina":"BIH","Bosnia and Herzegovina":"BIH","Brazil":"BRA","Cameroon":"CMR","Canada":"CAN","Chile":"CHI","Colombia":"COL","Congo":"CGO","Croatia":"CRO","Czech Republic":"CZE","Czechia":"CZE","Denmark":"DEN","Ecuador":"ECU","Egypt":"EGY","England":"ENG","France":"FRA","Germany":"GER","Ghana":"GHA","Iran":"IRN","Ivory Coast":"CIV","Jamaica":"JAM","Japan":"JPN","Mexico":"MEX","Morocco":"MAR","Netherlands":"NED","New Zealand":"NZL","Nigeria":"NGA","Norway":"NOR","Paraguay":"PAR","Peru":"PER","Portugal":"POR","Qatar":"QAT","Saudi Arabia":"KSA","Scotland":"SCO","Senegal":"SEN","Serbia":"SRB","South Africa":"RSA","South Korea":"KOR","Spain":"ESP","Sweden":"SWE","Switzerland":"SUI","Tunisia":"TUN","Turkey":"TUR","Uruguay":"URU","USA":"USA"};
 function flag(team) { return FLAGS[team] || '\u{1F3F3}\u{FE0F}'; }
@@ -276,7 +288,7 @@ function renderDashboard(data) {
   if (leaderboard.length > 0) {
     var leader = leaderboard[0];
     var gap = leaderboard.length > 1 ? (leader.total_points - leaderboard[1].total_points).toFixed(2) : 0;
-    document.getElementById('leaderAvatar').textContent = leader.name[0];
+    document.getElementById('leaderAvatar').textContent = getPlayerInitials(leader.name);
     document.getElementById('leaderName').textContent = leader.name;
     document.getElementById('leaderPts').innerHTML = '<strong>' + leader.total_points + ' pts</strong> \u00B7 ' + gap + ' pts ahead';
   }
@@ -289,7 +301,7 @@ function renderDashboard(data) {
     var teamsHtml = p.teams.map(function(t) {
       return '<span class="team-chip">' + flag(t.team) + ' ' + t.team + ' (' + t.points + ')</span>';
     }).join('');
-    kpiGrid.innerHTML += '<div class="kpi-card"><div class="kpi-header"><span class="kpi-rank ' + (RANK_CLASSES[i] || 'rank-4') + '">' + (RANK_LABELS[i] || (i+1)+'th') + '</span><div class="kpi-avatar" style="background:' + color + '22;color:' + color + '">' + p.name[0] + '</div></div><div class="kpi-player-name">' + p.name + '</div><div class="kpi-score" style="color:' + color + '">' + p.total_points + '</div><div class="kpi-teams">' + teamsHtml + '</div></div>';
+    kpiGrid.innerHTML += '<div class="kpi-card"><div class="kpi-header"><span class="kpi-rank ' + (RANK_CLASSES[i] || 'rank-4') + '">' + (RANK_LABELS[i] || (i+1)+'th') + '</span><div class="kpi-avatar" style="background:' + color + '22;color:' + color + '">' + getPlayerInitials(p.name) + '</div></div><div class="kpi-player-name">' + p.name + '</div><div class="kpi-score" style="color:' + color + '">' + p.total_points + '</div><div class="kpi-teams">' + teamsHtml + '</div></div>';
   });
 
   // Points Table
@@ -299,7 +311,7 @@ function renderDashboard(data) {
   leaderboard.forEach(function(p, i) {
     var color = PLAYER_COLORS[i] || PLAYER_COLORS[3];
     var g = i === 0 ? '\u2014' : (p.total_points - leaderboard[0].total_points).toFixed(2);
-    tbody.innerHTML += '<tr><td style="font-family:var(--font-display);font-weight:700;color:var(--color-text-muted)">' + (i+1) + '</td><td><div class="player-cell"><div class="mini-avatar" style="background:' + color + '22;color:' + color + '">' + p.name[0] + '</div><span style="font-weight:600">' + p.name + '</span></div></td><td class="total-col" style="color:' + color + '">' + p.total_points + '</td><td style="color:' + (i===0?'var(--color-text-muted)':'var(--color-error)') + ';font-weight:700">' + g + '</td></tr>';
+    tbody.innerHTML += '<tr><td style="font-family:var(--font-display);font-weight:700;color:var(--color-text-muted)">' + (i+1) + '</td><td><div class="player-cell"><div class="mini-avatar" style="background:' + color + '22;color:' + color + '">' + getPlayerInitials(p.name) + '</div><span style="font-weight:600">' + p.name + '</span></div></td><td class="total-col" style="color:' + color + '">' + p.total_points + '</td><td style="color:' + (i===0?'var(--color-text-muted)':'var(--color-error)') + ';font-weight:700">' + g + '</td></tr>';
   });
 
   // Bar vis
@@ -317,7 +329,7 @@ function renderDashboard(data) {
   var headerHtml = '<th>Match</th><th>Score</th>';
   orderedPlayers.forEach(function(name, i) {
     var color = PLAYER_COLORS[i] || PLAYER_COLORS[3];
-    headerHtml += '<th style="color:' + color + '">' + name[0] + '</th>';
+    headerHtml += '<th style="color:' + color + '">' + getPlayerInitials(name) + '</th>';
   });
   recentHead.innerHTML = headerHtml;
 
