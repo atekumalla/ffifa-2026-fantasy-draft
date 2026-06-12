@@ -34,6 +34,7 @@ _STAGE_MAP = {
 _COUNTRY_NAME_MAP = {
     "Czechia": "Czech Republic",
     "Korea Republic": "South Korea",
+    "Bosnia-Herzegovina": "Bosnia and Herzegovina",
     # Add other mappings as needed
 }
 

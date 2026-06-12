@@ -15,6 +15,14 @@ class TestCountryNameNormalization:
         """Czechia from API should become Czech Republic."""
         assert _normalize_team_name("Czechia") == "Czech Republic"
 
+    def test_bosnia_herzegovina_normalized(self):
+        """Bosnia-Herzegovina from API should become Bosnia and Herzegovina."""
+        assert _normalize_team_name("Bosnia-Herzegovina") == "Bosnia and Herzegovina"
+
+    def test_korea_republic_normalized(self):
+        """Korea Republic from API should become South Korea."""
+        assert _normalize_team_name("Korea Republic") == "South Korea"
+
     def test_other_countries_unchanged(self):
         """Countries without mappings should pass through unchanged."""
         assert _normalize_team_name("Brazil") == "Brazil"
