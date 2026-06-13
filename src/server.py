@@ -279,7 +279,7 @@ async def get_status():
             team_to_player[team] = player.name  # Also map the alias itself
     
     recent_matches = []
-    for m in finished[:10]:
+    for m in finished:
         pts = calculator.calculate_match_points(m)
         
         # Build per-player points for this match
