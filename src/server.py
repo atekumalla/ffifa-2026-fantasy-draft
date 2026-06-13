@@ -37,6 +37,14 @@ logger = logging.getLogger(__name__)
 _app_state: dict = {}
 _demo_mode: bool = False
 
+# Normalize draft pick team names to canonical match names
+# Draft picks may use aliases (e.g., "Czechia" vs "Czech Republic")
+_DRAFT_TEAM_ALIASES = {
+    "Czechia": "Czech Republic",
+    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+    "Congo": "DR Congo",
+}
+
 
 def _is_demo_mode() -> bool:
     """Check if demo mode is enabled via flag or env var."""
@@ -240,9 +248,9 @@ async def get_status():
             team_points[team] = team_points.get(team, 0.0) + p
 
     for player in players:
-        total = sum(round(team_points.get(t, 0.0), 2) for t in player.teams)
+        total = sum(round(team_points.get(_DRAFT_TEAM_ALIASES.get(t, t), 0.0), 2) for t in player.teams)
         team_breakdown = [
-            {"team": t, "points": round(team_points.get(t, 0.0), 2)}
+            {"team": t, "points": round(team_points.get(_DRAFT_TEAM_ALIASES.get(t, t), 0.0), 2)}
             for t in player.teams
         ]
         leaderboard.append({
@@ -257,15 +265,28 @@ async def get_status():
     finished = [m for m in matches if m.is_live_or_finished]
     finished.sort(key=lambda m: m.match_date, reverse=True)
     
-    # Build a mapping of team -> player name
+    # Build a mapping of team -> player name (using canonical names)
     team_to_player = {}
     for player in players:
         for team in player.teams:
-            team_to_player[team] = player.name
+            canonical = _DRAFT_TEAM_ALIASES.get(team, team)
+            team_to_player[canonical] = player.name
+            team_to_player[team] = player.name  # Also map the alias itself
     
     recent_matches = []
     for m in finished[:10]:
         pts = calculator.calculate_match_points(m)
+        
+        # Build per-player points for this match
+        player_points = {}
+        for player in players:
+            player_match_pts = 0.0
+            for team in player.teams:
+                canonical = _DRAFT_TEAM_ALIASES.get(team, team)
+                player_match_pts += pts.get(canonical, 0.0)
+            if player_match_pts > 0:
+                player_points[player.name] = round(player_match_pts, 2)
+        
         recent_matches.append({
             "date": m.match_date.isoformat(),
             "home_team": m.home_team,
@@ -278,6 +299,7 @@ async def get_status():
             "away_points": pts.get(m.away_team, 0),
             "home_player": team_to_player.get(m.home_team),
             "away_player": team_to_player.get(m.away_team),
+            "player_points": player_points,
         })
 
     # Upcoming matches (next 5)
@@ -475,7 +497,7 @@ async def get_share_text():
 
     standings = []
     for player in players:
-        total = sum(round(team_points.get(t, 0.0), 2) for t in player.teams)
+        total = sum(round(team_points.get(_DRAFT_TEAM_ALIASES.get(t, t), 0.0), 2) for t in player.teams)
         standings.append((player.name, round(total, 2)))
     standings.sort(key=lambda x: x[1], reverse=True)
 
@@ -544,8 +566,9 @@ def _calculate_worm_data(
             pts = calculator.calculate_match_points(match)
             for player in players:
                 for team in player.teams:
-                    if team in pts:
-                        running_totals[player.name] += pts[team]
+                    canonical = _DRAFT_TEAM_ALIASES.get(team, team)
+                    if canonical in pts:
+                        running_totals[player.name] += pts[canonical]
 
         for player in players:
             player_cumulative[player.name].append(round(running_totals[player.name], 2))

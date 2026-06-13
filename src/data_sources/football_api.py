@@ -35,7 +35,9 @@ _COUNTRY_NAME_MAP = {
     "Czechia": "Czech Republic",
     "Korea Republic": "South Korea",
     "Bosnia-Herzegovina": "Bosnia and Herzegovina",
-    # Add other mappings as needed
+    "United States": "USA",
+    "Cape Verde Islands": "Cape Verde",
+    "Congo DR": "DR Congo",
 }
 
 _STATUS_MAP = {

@@ -76,7 +76,7 @@ class Match(BaseModel):
     @property
     def result_for_team(self) -> dict[str, str]:
         """Returns 'win', 'draw', or 'loss' for each team."""
-        if not self.is_played:
+        if not self.is_live_or_finished:
             return {}
         hg, ag = self.home_goals_regular, self.away_goals_regular
         if hg > ag:

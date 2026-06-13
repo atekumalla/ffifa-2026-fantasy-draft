@@ -20,7 +20,7 @@ class ScoringCalculator:
             Dict mapping team name -> points earned in this match.
             Empty dict if match hasn't been played yet.
         """
-        if not match.is_played:
+        if not match.is_live_or_finished:
             return {}
 
         is_knockout = match.stage.is_knockout

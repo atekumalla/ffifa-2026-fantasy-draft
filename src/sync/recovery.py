@@ -94,12 +94,30 @@ def reconcile_matches(
     return sorted(reconciled, key=lambda m: m.match_date)
 
 
+# Normalize team names for consistent key matching
+# Handles cases where API returned unnormalized names in previous syncs
+_KEY_NORMALIZE = {
+    "united states": "usa",
+    "cape verde islands": "cape verde",
+    "congo dr": "dr congo",
+    "czechia": "czech republic",
+    "bosnia-herzegovina": "bosnia and herzegovina",
+    "korea republic": "south korea",
+}
+
+
+def _normalize_for_key(name: str) -> str:
+    """Normalize a team name for key matching purposes."""
+    lower = name.lower()
+    return _KEY_NORMALIZE.get(lower, lower)
+
+
 def _match_key(match: Match) -> str:
     """Create a lookup key for a match (stage + teams, ignoring date due to timezone differences).
     
     The Football API may return matches with UTC dates that differ from local timezone dates,
-    causing the same match to be keyed differently. Using stage + team names ensures proper
-    matching while allowing the same teams to play in different stages (e.g., group vs knockout).
+    causing the same match to be keyed differently. Using stage + normalized team names ensures
+    proper matching while allowing the same teams to play in different stages (e.g., group vs knockout).
     """
-    teams = sorted([match.home_team.lower(), match.away_team.lower()])
+    teams = sorted([_normalize_for_key(match.home_team), _normalize_for_key(match.away_team)])
     return f"{match.stage.value}_{teams[0]}_{teams[1]}"
