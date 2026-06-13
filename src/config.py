@@ -40,10 +40,16 @@ class Config:
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
     # --- Sync Schedule ---
-    # Cron-style: hour and minute (24h format) for daily auto-sync
+    # Cron-style: hour and minute (24h format) for daily auto-sync (legacy, still used for timezone)
     SYNC_HOUR: int = int(os.getenv("SYNC_HOUR", "6"))  # 6 AM default
     SYNC_MINUTE: int = int(os.getenv("SYNC_MINUTE", "0"))
     SYNC_TIMEZONE: str = os.getenv("SYNC_TIMEZONE", "Asia/Kolkata")
+
+    # Interval-based sync (preferred over daily cron)
+    # Regular sync interval in minutes (default: 60 = once per hour)
+    SYNC_INTERVAL_MINUTES: int = int(os.getenv("SYNC_INTERVAL_MINUTES", "60"))
+    # Live match sync interval in seconds (default: 120 = every 2 minutes)
+    SYNC_LIVE_INTERVAL_SECONDS: int = int(os.getenv("SYNC_LIVE_INTERVAL_SECONDS", "120"))
 
     # --- State ---
     # On Render: use /tmp or a persistent disk path

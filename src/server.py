@@ -173,7 +173,12 @@ async def lifespan(app: FastAPI):
         def _sync():
             _do_sync(state)
 
-        state["scheduler"] = SyncScheduler(sync_fn=_sync)
+        def _has_live_matches():
+            """Check if any current matches are live/in-play."""
+            matches = state.get("matches", [])
+            return any(m.status == MatchStatus.IN_PLAY for m in matches)
+
+        state["scheduler"] = SyncScheduler(sync_fn=_sync, has_live_matches_fn=_has_live_matches)
         state["scheduler"].start()
 
         _app_state.update(state)

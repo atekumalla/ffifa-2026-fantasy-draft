@@ -6,39 +6,44 @@ The FIFA 2026 Fantasy Draft app syncs match scores and updates the leaderboard a
 
 ---
 
-## Sync Schedule (Automatic Daily Sync)
+## Sync Schedule (Automatic Interval Sync)
 
-The app automatically syncs once per day at a configured time.
+The app automatically syncs at regular intervals and switches to aggressive mode when live matches are detected.
 
 ### Environment Variables
 
 ```bash
-# Daily sync time (24-hour format)
-SYNC_HOUR=6          # Default: 6 AM
-SYNC_MINUTE=0        # Default: 0 minutes
-SYNC_TIMEZONE=Asia/Kolkata  # Default: IST
+# Regular sync interval in minutes (default: 60 = once per hour)
+SYNC_INTERVAL_MINUTES=60
+
+# Live match sync interval in seconds (default: 120 = every 2 minutes)
+SYNC_LIVE_INTERVAL_SECONDS=120
+
+# Timezone for scheduler
+SYNC_TIMEZONE=Asia/Kolkata
 ```
 
-### How to Change
+### How It Works
 
-**For more frequent automatic syncs during live matches:**
+- **Regular mode**: Syncs every `SYNC_INTERVAL_MINUTES` minutes (default: hourly)
+- **Live mode**: When a match is `IN_PLAY`, automatically switches to syncing every `SYNC_LIVE_INTERVAL_SECONDS` seconds (default: every 2 minutes)
+- **Auto-switch back**: Once no live matches are detected, reverts to regular interval
 
-The automatic sync runs once daily. For tournament days with live matches, you have two options:
+### Recommended Values
 
-#### Option 1: Multiple Daily Syncs (Requires Code Change)
-Currently, the scheduler only supports one daily sync. To add multiple syncs per day, you would need to modify `src/sync/scheduler.py`.
+| Scenario | `SYNC_INTERVAL_MINUTES` | `SYNC_LIVE_INTERVAL_SECONDS` |
+|----------|------------------------|------------------------------|
+| **Default** | `60` | `120` |
+| **Aggressive** | `30` | `60` |
+| **Conservative** (free API tier) | `120` | `300` |
+| **Testing** | `5` | `30` |
 
-#### Option 2: Reduce Manual Sync Cooldown (Recommended)
-Make manual syncs available more frequently:
+### Legacy Config (still supported)
 
 ```bash
-# In your .env file:
-SYNC_COOLDOWN_SECONDS=60    # Allow manual sync every 1 minute
-# OR
-SYNC_COOLDOWN_SECONDS=300   # Allow manual sync every 5 minutes
+SYNC_HOUR=6          # Legacy: used with timezone only
+SYNC_MINUTE=0
 ```
-
-Default is 600 seconds (10 minutes).
 
 ---
 
