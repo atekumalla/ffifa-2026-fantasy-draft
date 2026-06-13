@@ -307,7 +307,7 @@ async def get_status():
             "player_points": player_points,
         })
 
-    # Upcoming matches (next 5)
+    # Upcoming matches (all scheduled)
     upcoming = [m for m in matches if m.status == MatchStatus.SCHEDULED]
     upcoming.sort(key=lambda m: m.match_date)
     
@@ -321,7 +321,7 @@ async def get_status():
             "home_player": team_to_player.get(m.home_team),
             "away_player": team_to_player.get(m.away_team),
         }
-        for m in upcoming[:5]
+        for m in upcoming
     ]
 
     # Score worm data (cumulative points by date)
