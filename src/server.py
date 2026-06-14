@@ -266,9 +266,16 @@ async def get_status():
 
     leaderboard.sort(key=lambda x: x["total_points"], reverse=True)
 
-    # Recent finished/live matches (last 10)
+    # Recent finished/live matches — stack ordering:
+    # 1. Live (IN_PLAY) matches always on top
+    # 2. Then by date descending (most recent first)
+    # 3. Within same date, by kickoff_time descending (latest kickoff first)
     finished = [m for m in matches if m.is_live_or_finished]
-    finished.sort(key=lambda m: m.match_date, reverse=True)
+    finished.sort(key=lambda m: (
+        0 if m.status == MatchStatus.IN_PLAY else 1,  # Live on top
+        -(m.match_date.toordinal()),  # Most recent date first
+        -(m.kickoff_time.timestamp() if m.kickoff_time else 0),  # Latest kickoff first
+    ))
     
     # Build a mapping of team -> player name (using canonical names)
     team_to_player = {}
@@ -547,7 +554,7 @@ def _calculate_worm_data(
     """Calculate cumulative points by date for the score worm chart."""
     from datetime import date as dt_date, timedelta
 
-    finished = [m for m in matches if m.is_played]
+    finished = [m for m in matches if m.is_live_or_finished]
     if not finished:
         return {"dates": [], "players": {p.name: [] for p in players}}
 
