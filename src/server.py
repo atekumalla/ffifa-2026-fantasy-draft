@@ -171,18 +171,21 @@ async def lifespan(app: FastAPI):
             logger.error(f"Failed to load from sheets: {e}")
 
         def _sync():
-            _do_sync(state)
+            _do_sync(_app_state)
 
         def _has_live_matches():
             """Check if any current matches are live/in-play."""
-            matches = state.get("matches", [])
+            matches = _app_state.get("matches", [])
             return any(m.status == MatchStatus.IN_PLAY for m in matches)
 
         state["scheduler"] = SyncScheduler(sync_fn=_sync, has_live_matches_fn=_has_live_matches)
-        state["scheduler"].start()
 
         _app_state.update(state)
         logger.info("Server ready!")
+
+        # Start scheduler and trigger an immediate first sync to catch up
+        state["scheduler"].start()
+        state["scheduler"].trigger_now()
 
         yield
 
