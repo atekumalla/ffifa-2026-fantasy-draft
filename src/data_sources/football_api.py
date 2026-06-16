@@ -164,13 +164,14 @@ class FootballDataAPI:
         for m in raw_matches:
             try:
                 match = self._parse_single_match(m)
-                matches.append(match)
+                if match is not None:
+                    matches.append(match)
             except Exception as e:
                 logger.warning(f"Failed to parse match {m.get('id')}: {e}")
         return matches
 
-    def _parse_single_match(self, m: dict) -> Match:
-        """Parse a single match from the API response."""
+    def _parse_single_match(self, m: dict) -> Match | None:
+        """Parse a single match from the API response. Returns None for TBD knockout matches."""
         score = m.get("score", {})
         full_time = score.get("fullTime", {})
         penalties = score.get("penalties", {})
@@ -188,9 +189,13 @@ class FootballDataAPI:
         status_str = m.get("status", "SCHEDULED")
         status = _STATUS_MAP.get(status_str, MatchStatus.SCHEDULED)
 
-        # Parse teams
-        home_team_raw = m.get("homeTeam", {}).get("name", "TBD")
-        away_team_raw = m.get("awayTeam", {}).get("name", "TBD")
+        # Parse teams — API returns null for TBD knockout matches
+        home_team_raw = m.get("homeTeam", {}).get("name") or None
+        away_team_raw = m.get("awayTeam", {}).get("name") or None
+        
+        # Skip matches where teams haven't been determined yet (knockout TBD)
+        if not home_team_raw or not away_team_raw:
+            return None
         
         # Normalize team names to match our internal conventions
         home_team = _normalize_team_name(home_team_raw)
@@ -255,6 +260,7 @@ class FootballDataAPI:
         """Enrich matches with venue info, fetching from API where needed.
         
         Only fetches venues for matches that don't already have one cached.
+        Includes a small delay between requests to avoid rate limiting.
         
         Args:
             matches: List of matches to enrich (must have football-data.org IDs)
@@ -262,6 +268,8 @@ class FootballDataAPI:
         Returns:
             The same list of matches with venue field populated where possible
         """
+        import time
+
         requests_made = 0
         for match in matches:
             # Skip if venue already set
@@ -276,6 +284,10 @@ class FootballDataAPI:
             # Skip non-numeric IDs (e.g. sheet_row_XX) — not valid API IDs
             if not match.match_id.isdigit():
                 continue
+
+            # Throttle: wait between requests to avoid rate limits
+            if requests_made > 0:
+                time.sleep(6)  # ~10 requests/minute stays well within limits
 
             venue = self.fetch_match_venue(match.match_id)
             if venue:
