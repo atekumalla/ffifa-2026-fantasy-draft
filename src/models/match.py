@@ -51,6 +51,10 @@ class Match(BaseModel):
     home_penalties: Optional[int] = None
     away_penalties: Optional[int] = None
 
+    # Live match timing (available when status is IN_PLAY)
+    minute: Optional[int] = None
+    injury_time: Optional[int] = None
+
     status: MatchStatus = MatchStatus.SCHEDULED
 
     @property

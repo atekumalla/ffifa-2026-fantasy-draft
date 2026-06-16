@@ -424,7 +424,11 @@ function renderRecentPage() {
 
     var liveIndicator = '';
     if (m.status === 'in_play') {
-      liveIndicator = ' <span class="live-indicator" title="Live match in progress"><span class="live-dot"></span>LIVE</span>';
+      var timeDisplay = '';
+      if (m.minute != null) {
+        timeDisplay = m.minute + (m.injury_time ? '+' + m.injury_time : '') + "'";
+      }
+      liveIndicator = ' <span class="live-indicator" title="Live match in progress"><span class="live-dot"></span>' + (timeDisplay || 'LIVE') + '</span>';
     }
 
     row += '<td class="score-cell">' + m.home_goals + ' \u2013 ' + m.away_goals + liveIndicator + '</td>';

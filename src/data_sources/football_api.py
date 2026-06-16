@@ -72,7 +72,10 @@ class FootballDataAPI:
         self.base_url = Config.FOOTBALL_API_BASE_URL
         self.competition = Config.FOOTBALL_API_COMPETITION
         self.session = requests.Session()
-        self.session.headers.update({"X-Auth-Token": self.api_key})
+        self.session.headers.update({
+            "X-Auth-Token": self.api_key,
+            "X-Api-Version": "v4.1",
+        })
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=30))
     def _get(self, endpoint: str, params: dict | None = None) -> dict:
@@ -214,5 +217,7 @@ class FootballDataAPI:
             away_goals=full_time.get("away"),
             home_penalties=penalties.get("home"),
             away_penalties=penalties.get("away"),
+            minute=m.get("minute"),
+            injury_time=m.get("injuryTime"),
             status=status,
         )

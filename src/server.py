@@ -309,6 +309,8 @@ async def get_status():
             "home_goals": m.home_goals,
             "away_goals": m.away_goals,
             "status": m.status.value,  # Include status for live indicator
+            "minute": m.minute,
+            "injury_time": m.injury_time,
             "stage": m.stage.value,
             "home_points": pts.get(m.home_team, 0),
             "away_points": pts.get(m.away_team, 0),
