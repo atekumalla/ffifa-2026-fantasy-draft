@@ -167,6 +167,8 @@ async def lifespan(app: FastAPI):
             logger.info(
                 f"Loaded {len(state['players'])} players, {len(state['matches'])} matches"
             )
+            # Enrich matches with kickoff times and venues from the API
+            state["matches"] = state["football_api"].enrich_schedule_from_api(state["matches"])
         except Exception as e:
             logger.error(f"Failed to load from sheets: {e}")
 
@@ -326,6 +328,8 @@ async def get_status():
     upcoming_matches = [
         {
             "date": m.match_date.isoformat(),
+            "kickoff_time": m.kickoff_time.isoformat() if m.kickoff_time else None,
+            "venue": m.venue,
             "home_team": m.home_team,
             "away_team": m.away_team,
             "stage": m.stage.value,
@@ -654,6 +658,16 @@ def _do_sync(state: dict):
 
     state_mgr.mark_synced()
     logger.info("Sync completed")
+
+    # Enrich upcoming matches with venue data
+    try:
+        upcoming = [m for m in state["matches"]
+                    if m.status == MatchStatus.SCHEDULED and not m.venue and m.match_id.isdigit()]
+        upcoming.sort(key=lambda m: m.match_date)
+        if upcoming:
+            football_api.enrich_matches_with_venues(upcoming)
+    except Exception as e:
+        logger.warning(f"Failed to enrich venues: {e}")
 
 
 def start():

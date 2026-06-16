@@ -1,13 +1,13 @@
 """Schedule sheet — manages the 'Match Schedule' tab in Google Sheets.
 
 Sheet layout:
-  | Date | Stage | Group | Home Team | Away Team | Home Goals | Away Goals | Home Pen | Away Pen | Status | Home Pts | Away Pts |
+  | Date | Stage | Group | Home Team | Away Team | Home Goals | Away Goals | Home Pen | Away Pen | Status | Home Pts | Away Pts | Kickoff Time | Venue |
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import date
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from src.models.match import Match, MatchStage, MatchStatus
@@ -33,6 +33,8 @@ HEADERS = [
     "Status",
     "Home Points",
     "Away Points",
+    "Kickoff Time",
+    "Venue",
 ]
 
 
@@ -107,6 +109,8 @@ def _match_to_row(match: Match, home_pts: float = 0, away_pts: float = 0) -> lis
         match.status.value,
         home_pts,
         away_pts,
+        match.kickoff_time.isoformat() if match.kickoff_time else "",
+        match.venue or "",
     ]
 
 
@@ -119,9 +123,22 @@ def _row_to_match(row: list, row_index: int) -> Match:
     stage_map = {s.value: s for s in MatchStage}
     status_map = {s.value: s for s in MatchStatus}
 
+    # Parse kickoff time (ISO format with timezone)
+    kickoff_time = None
+    if row[12] and row[12].strip():
+        try:
+            kickoff_time = datetime.fromisoformat(row[12])
+        except (ValueError, IndexError):
+            pass
+
+    # Parse venue
+    venue = row[13] if len(row) > 13 and row[13] else None
+
     return Match(
         match_id=f"sheet_row_{row_index}",
         match_date=date.fromisoformat(row[0]),
+        kickoff_time=kickoff_time,
+        venue=venue,
         stage=stage_map.get(row[1], MatchStage.GROUP),
         group=row[2] or None,
         home_team=row[3],

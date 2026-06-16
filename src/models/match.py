@@ -37,6 +37,7 @@ class Match(BaseModel):
     match_id: str = Field(description="Unique match identifier")
     match_date: date
     kickoff_time: Optional[datetime] = None
+    venue: Optional[str] = None  # Stadium name (e.g. "Arrowhead Stadium")
     stage: MatchStage = MatchStage.GROUP
     group: Optional[str] = None  # e.g. "A", "B", etc.
 

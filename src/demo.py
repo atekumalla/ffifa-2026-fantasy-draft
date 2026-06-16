@@ -417,6 +417,8 @@ class DemoState:
         return [
             {
                 "date": m.match_date.isoformat(),
+                "kickoff_time": m.kickoff_time.isoformat() if m.kickoff_time else None,
+                "venue": m.venue,
                 "home_team": m.home_team,
                 "away_team": m.away_team,
                 "stage": m.stage.value,

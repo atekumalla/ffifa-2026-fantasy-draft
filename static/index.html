@@ -481,10 +481,21 @@ function renderUpcomingPage() {
   var pageMatches = allUpcomingMatches.slice(start, end);
   
   pageMatches.forEach(function(m) {
-    var parts = m.date.split('-');
-    var dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    var dateStr = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     var groupLabel = m.group ? 'Group ' + m.group : m.stage.replace(/_/g,' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
+    
+    // Format kickoff time in browser's local timezone
+    var timeStr = '';
+    if (m.kickoff_time) {
+      var kickoff = new Date(m.kickoff_time);
+      timeStr = kickoff.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+    } else {
+      var parts = m.date.split('-');
+      var dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      timeStr = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    
+    // Venue info
+    var venueStr = m.venue ? '<span title="' + m.venue + '">📍 ' + m.venue + '</span>' : '';
     
     var homePlayerBadge = '';
     var awayPlayerBadge = '';
@@ -501,7 +512,12 @@ function renderUpcomingPage() {
       awayPlayerBadge = '<span class="match-player-badge" style="background:' + color + '" title="' + m.away_player + '">' + getPlayerInitials(m.away_player) + '</span>';
     }
     
-    upList.innerHTML += '<div class="match-card"><div class="match-meta"><span>' + groupLabel + '</span><span>' + dateStr + '</span></div><div class="match-teams"><span class="match-team"><div class="match-player-badges">' + homePlayerBadge + '</div>' + flag(m.home_team) + ' ' + m.home_team + '</span><span class="match-score tbd">VS</span><span class="match-team">' + flag(m.away_team) + ' ' + m.away_team + '<div class="match-player-badges">' + awayPlayerBadge + '</div></span></div></div>';
+    var metaRight = '<span>' + timeStr + '</span>';
+    if (venueStr) {
+      metaRight = '<span style="display:flex;flex-direction:column;align-items:flex-end;gap:2px"><span>' + timeStr + '</span><span style="font-size:var(--text-xs);opacity:.8">' + venueStr + '</span></span>';
+    }
+    
+    upList.innerHTML += '<div class="match-card"><div class="match-meta"><span>' + groupLabel + '</span>' + metaRight + '</div><div class="match-teams"><span class="match-team"><div class="match-player-badges">' + homePlayerBadge + '</div>' + flag(m.home_team) + ' ' + m.home_team + '</span><span class="match-score tbd">VS</span><span class="match-team">' + flag(m.away_team) + ' ' + m.away_team + '<div class="match-player-badges">' + awayPlayerBadge + '</div></span></div></div>';
   });
   
   // Update pagination controls

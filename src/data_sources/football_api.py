@@ -67,6 +67,9 @@ def _normalize_team_name(api_name: str) -> str:
 class FootballDataAPI:
     """Client for football-data.org REST API v4."""
 
+    # Class-level venue cache (persists across instances within the same process)
+    _venue_cache: dict[str, str] = {}
+
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key or Config.FOOTBALL_API_KEY
         self.base_url = Config.FOOTBALL_API_BASE_URL
@@ -205,10 +208,14 @@ class FootballDataAPI:
         if group:
             group = group.replace("GROUP_", "")  # "GROUP_A" -> "A"
 
+        # Parse venue (only available from individual match endpoint)
+        venue = m.get("venue")
+
         return Match(
             match_id=str(m.get("id", "")),
             match_date=match_date,
             kickoff_time=kickoff,
+            venue=venue,
             stage=stage,
             group=group if group else None,
             home_team=home_team,
@@ -221,3 +228,111 @@ class FootballDataAPI:
             injury_time=m.get("injuryTime"),
             status=status,
         )
+
+    def fetch_match_venue(self, match_id: str) -> str | None:
+        """Fetch venue for a single match from the individual match endpoint.
+        
+        The bulk matches endpoint doesn't include venue, so we need to
+        call the individual match endpoint to get it.
+        Uses a class-level cache to avoid repeat API calls.
+        """
+        # Check cache first
+        if match_id in self._venue_cache:
+            return self._venue_cache[match_id]
+
+        try:
+            data = self._get(f"matches/{match_id}")
+            venue = data.get("venue")
+            if venue:
+                self._venue_cache[match_id] = venue
+                logger.debug(f"Cached venue for match {match_id}: {venue}")
+            return venue
+        except Exception as e:
+            logger.warning(f"Failed to fetch venue for match {match_id}: {e}")
+            return None
+
+    def enrich_matches_with_venues(self, matches: list[Match]) -> list[Match]:
+        """Enrich matches with venue info, fetching from API where needed.
+        
+        Only fetches venues for matches that don't already have one cached.
+        
+        Args:
+            matches: List of matches to enrich (must have football-data.org IDs)
+            
+        Returns:
+            The same list of matches with venue field populated where possible
+        """
+        requests_made = 0
+        for match in matches:
+            # Skip if venue already set
+            if match.venue:
+                continue
+
+            # Check cache
+            if match.match_id in self._venue_cache:
+                match.venue = self._venue_cache[match.match_id]
+                continue
+
+            # Skip non-numeric IDs (e.g. sheet_row_XX) — not valid API IDs
+            if not match.match_id.isdigit():
+                continue
+
+            venue = self.fetch_match_venue(match.match_id)
+            if venue:
+                match.venue = venue
+            requests_made += 1
+
+        cached_count = sum(1 for m in matches if m.venue)
+        logger.info(f"Venue enrichment: {cached_count}/{len(matches)} matches have venues "
+                   f"({requests_made} API calls made)")
+        return matches
+
+    def enrich_schedule_from_api(self, sheet_matches: list[Match]) -> list[Match]:
+        """Enrich sheet matches with kickoff times and venues from the API.
+        
+        Fetches all matches from the API bulk endpoint (1 API call) to get
+        kickoff times, then fetches venues individually for upcoming matches.
+        
+        Args:
+            sheet_matches: Matches loaded from the Google Sheet
+            
+        Returns:
+            Enriched matches with kickoff_time and venue where available
+        """
+        try:
+            api_matches = self.fetch_all_matches()
+            logger.info(f"Fetched {len(api_matches)} matches from API for enrichment")
+        except Exception as e:
+            logger.warning(f"Failed to fetch matches for enrichment: {e}")
+            return sheet_matches
+
+        # Build a lookup from composite key to API match
+        from src.sync.recovery import _match_key
+        api_index: dict[str, Match] = {}
+        for m in api_matches:
+            key = _match_key(m)
+            api_index[key] = m
+
+        # Enrich sheet matches with kickoff_time and API match_id
+        for sheet_match in sheet_matches:
+            key = _match_key(sheet_match)
+            if key in api_index:
+                api_match = api_index[key]
+                # Copy kickoff_time from API (which parses utcDate)
+                if api_match.kickoff_time and not sheet_match.kickoff_time:
+                    sheet_match.kickoff_time = api_match.kickoff_time
+                # Update match_id to the API ID so venue fetching works
+                if api_match.match_id.isdigit():
+                    sheet_match.match_id = api_match.match_id
+                # Copy venue if already available (from individual endpoint)
+                if api_match.venue and not sheet_match.venue:
+                    sheet_match.venue = api_match.venue
+
+        # Now fetch venues for upcoming matches using the correct API IDs
+        from src.models.match import MatchStatus
+        upcoming = [m for m in sheet_matches if m.status == MatchStatus.SCHEDULED and not m.venue]
+        upcoming.sort(key=lambda m: m.match_date)
+        if upcoming:
+            self.enrich_matches_with_venues(upcoming)
+
+        return sheet_matches
