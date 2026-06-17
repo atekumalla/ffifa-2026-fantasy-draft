@@ -406,7 +406,10 @@ class DemoState:
             m for m in self.matches
             if m.status == MatchStatus.SCHEDULED and m.stage == MatchStage.GROUP
         ]
-        upcoming.sort(key=lambda m: m.match_date)
+        upcoming.sort(key=lambda m: (
+            m.kickoff_time.timestamp() if m.kickoff_time else float('inf'),
+            m.match_date.toordinal(),
+        ))
         
         # Build a mapping of team -> player name
         team_to_player = {}

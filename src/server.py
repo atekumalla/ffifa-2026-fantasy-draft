@@ -321,9 +321,12 @@ async def get_status():
             "player_points": player_points,
         })
 
-    # Upcoming matches (all scheduled)
+    # Upcoming matches (all scheduled), sorted by kickoff time
     upcoming = [m for m in matches if m.status == MatchStatus.SCHEDULED]
-    upcoming.sort(key=lambda m: m.match_date)
+    upcoming.sort(key=lambda m: (
+        m.kickoff_time.timestamp() if m.kickoff_time else float('inf'),
+        m.match_date.toordinal(),
+    ))
     
     upcoming_matches = [
         {
