@@ -20,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 WORKSHEET_TITLE = "Leaderboard"
 
+# Draft picks may use different names than the match schedule / API.
+# This maps draft-pick names → canonical match names so points are found.
+_TEAM_ALIASES = {
+    "Czechia": "Czech Republic",
+    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+    "Congo": "DR Congo",
+}
+
 
 def write_leaderboard(
     client: SheetsClient,
@@ -53,7 +61,8 @@ def write_leaderboard(
         total = 0.0
         team_details = []
         for team in player.teams:
-            pts = round(team_points.get(team, 0.0), 2)
+            canonical = _TEAM_ALIASES.get(team, team)
+            pts = round(team_points.get(canonical, 0.0), 2)
             total += pts
             team_details.append(f"{team} ({pts})")
         total = round(total, 2)
