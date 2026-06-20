@@ -263,6 +263,8 @@ async def get_status():
             {"team": t, "points": round(team_points.get(_DRAFT_TEAM_ALIASES.get(t, t), 0.0), 2)}
             for t in player.teams
         ]
+        # Sort teams by points descending (highest scoring teams first)
+        team_breakdown.sort(key=lambda x: x["points"], reverse=True)
         leaderboard.append({
             "name": player.name,
             "total_points": round(total, 2),
