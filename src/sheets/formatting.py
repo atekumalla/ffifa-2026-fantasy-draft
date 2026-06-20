@@ -176,6 +176,33 @@ def format_leaderboard_tab(worksheet: gspread.Worksheet, num_players: int):
     _batch_update(worksheet, requests)
 
 
+def format_eliminated_teams(
+    worksheet: gspread.Worksheet,
+    eliminated_cells: list[tuple[int, int]],
+):
+    """
+    Apply strikethrough and gray text to eliminated team cells in the leaderboard.
+
+    Args:
+        worksheet: The Leaderboard worksheet.
+        eliminated_cells: List of (row_index, col_index) where row_index is
+            1-based data row (0 = header) and col_index is 0-based column.
+    """
+    if not eliminated_cells:
+        return
+
+    sheet_id = worksheet.id
+    requests = []
+
+    for row_idx, col_idx in eliminated_cells:
+        # row_idx is the 1-based data row (rank), so sheet row = row_idx (header is row 0)
+        requests.append(_strikethrough_cell_request(
+            sheet_id, row_idx, row_idx + 1, col_idx, col_idx + 1
+        ))
+
+    _batch_update(worksheet, requests)
+
+
 # ============================================================================
 # Helper functions for building Sheets API requests
 # ============================================================================
@@ -348,5 +375,31 @@ def _font_size_request(
                 }
             },
             "fields": "userEnteredFormat.textFormat.fontSize",
+        }
+    }
+
+
+def _strikethrough_cell_request(
+    sheet_id: int, start_row: int, end_row: int, start_col: int, end_col: int
+) -> dict:
+    """Apply strikethrough and gray text color to indicate eliminated teams."""
+    return {
+        "repeatCell": {
+            "range": {
+                "sheetId": sheet_id,
+                "startRowIndex": start_row,
+                "endRowIndex": end_row,
+                "startColumnIndex": start_col,
+                "endColumnIndex": end_col,
+            },
+            "cell": {
+                "userEnteredFormat": {
+                    "textFormat": {
+                        "strikethrough": True,
+                        "foregroundColor": {"red": 0.6, "green": 0.6, "blue": 0.6},
+                    },
+                }
+            },
+            "fields": "userEnteredFormat.textFormat(strikethrough,foregroundColor)",
         }
     }

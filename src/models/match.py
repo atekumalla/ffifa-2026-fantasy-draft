@@ -90,3 +90,24 @@ class Match(BaseModel):
             return {self.home_team: "loss", self.away_team: "win"}
         else:
             return {self.home_team: "draw", self.away_team: "draw"}
+
+    @property
+    def knockout_loser(self) -> str | None:
+        """Return the team eliminated in a knockout match, or None."""
+        if not self.stage.is_knockout or not self.is_played:
+            return None
+        hg, ag = self.home_goals_regular, self.away_goals_regular
+        if hg > ag:
+            return self.away_team
+        elif ag > hg:
+            return self.home_team
+        else:
+            # Draw in regular/extra time — decided on penalties
+            hp = self.home_penalties or 0
+            ap = self.away_penalties or 0
+            if hp > ap:
+                return self.away_team
+            elif ap > hp:
+                return self.home_team
+            # If penalties also equal (shouldn't happen), can't determine
+            return None
