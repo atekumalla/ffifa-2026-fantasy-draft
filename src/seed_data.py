@@ -120,8 +120,8 @@ def get_group_stage_matches() -> list[Match]:
         (date(2026, 6, 13), "Turkey", "Australia"),
         (date(2026, 6, 19), "USA", "Turkey"),
         (date(2026, 6, 19), "Paraguay", "Australia"),
-        (date(2026, 6, 25), "Turkey", "USA"),
-        (date(2026, 6, 25), "Paraguay", "Australia"),
+        (date(2026, 6, 25), "Australia", "USA"),
+        (date(2026, 6, 25), "Turkey", "Paraguay"),
     ]
     for d, home, away in group_d_dates:
         matches.append(Match(
