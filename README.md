@@ -5,10 +5,14 @@ A complete fantasy draft system for the FIFA 2026 World Cup with a real-time web
 **✨ Features:**
 - 🎮 **Interactive Web Dashboard** — Real-time leaderboard with charts, match timeline, and share functionality
 - 📊 **Google Sheets Backend** — All data lives in a shareable spreadsheet (works standalone)
-- 🤖 **Automated Syncing** — Scheduled daily updates from football-data.org API + ChatGPT fallback
+- 🤖 **Automated Syncing** — Interval-based updates from football-data.org API + ChatGPT fallback
+- ⚡ **Live Match Mode** — Switches to 2-min sync interval when matches are in play, with live minute/injury time display
+- 🚫 **Eliminated Team Tracking** — Strikethrough formatting for teams knocked out (group stage + all knockout rounds)
+- 🏆 **Knockout Bracket Updates** — Automatically replaces TBD placeholders with real teams as the bracket is determined
 - 🚀 **Demo Mode** — Try it instantly with fake data, no credentials needed
 - 💪 **Production Ready** — Deployable to Render/Heroku with full crash recovery
 - ✅ **Validation System** — Daily integrity checks with detailed error reporting
+- 🔄 **Auto-Refresh UI** — Dashboard updates every 60 seconds without manual reload
 
 ## Scoring System
 
@@ -45,11 +49,10 @@ A complete fantasy draft system for the FIFA 2026 World Cup with a real-time web
 **Components:**
 - **Google Sheets** — 5 tabs: Draft Picks, Match Schedule, Leaderboard, Scoring Rules, Validation Log
 - **FastAPI Server** — REST API + static dashboard UI at `http://localhost:8000`
-- **Sync Engine** — APScheduler for daily updates, state file for crash recovery
+- **Sync Engine** — APScheduler with adaptive intervals (60 min regular, 2 min during live matches)
+- **Knockout Tracker** — Automatically updates bracket from API and marks eliminated teams
 - **Data Sources** — football-data.org (primary), OpenAI GPT-4o-mini (fallback)
 - **Validation** — Daily integrity checks on scoring consistency
-
-## Quick Start (Production Mode)
 
 ## Quick Start (Production Mode)
 
@@ -90,8 +93,11 @@ Open **http://localhost:8000** to see the live dashboard!
 The server will:
 - ✅ Load draft picks and matches from Google Sheets
 - ✅ Display real-time leaderboard with charts
-- ✅ Auto-sync daily at 6:00 AM (configurable via `SYNC_HOUR`)
+- ✅ Sync every 60 minutes (every 2 minutes when live matches detected)
+- ✅ Auto-update knockout bracket from API (replaces TBD with real teams)
+- ✅ Apply strikethrough to eliminated teams in Google Sheets
 - ✅ Run daily validation checks
+- ✅ Auto-refresh dashboard every 60 seconds
 - ✅ Expose API endpoints for manual sync/validate
 
 ---
@@ -145,14 +151,18 @@ Perfect for:
 ## Dashboard Features
 
 ### Web UI (http://localhost:8000)
-- 📈 **Live Leaderboard** — Current rankings with point breakdowns
-- 📊 **Points Chart** — Visual comparison across all players
-- 🎯 **Recent Matches** — Last 5 completed matches with scores
-- ⚽ **Upcoming Matches** — Next 5 scheduled matches
-- 🔄 **Manual Sync** — Trigger score updates on-demand (10 min cooldown)
-- ✅ **Validation** — Run integrity checks manually (10 min cooldown)
+- 📈 **Live Leaderboard** — Current rankings with point breakdowns per team
+- 📊 **Score Worm Chart** — Visual point progression across all players over time
+- 🎯 **Recent Matches** — Paginated match results with scores and player badges
+- ⚽ **Upcoming Matches** — Paginated upcoming matches with kickoff times, venues, and player indicators
+- ⚡ **Live Match Display** — Shows live minute + injury time for in-progress matches
+- 🚫 **Eliminated Teams** — Strikethrough formatting on knocked-out teams in Google Sheets leaderboard
+- 🔄 **Manual Sync** — Trigger score updates on-demand (configurable cooldown)
+- ✅ **Validation** — Run integrity checks manually
 - 📱 **Share to WhatsApp** — Generate shareable leaderboard text
 - 🌓 **Dark/Light Theme** — Toggle via button in header
+- 🔁 **Auto-Refresh** — Dashboard polls every 60 seconds for latest data
+- 📋 **Scoring Rules Modal** — View point breakdown from the dashboard
 
 ### API Endpoints
 - `GET /` — Dashboard HTML
@@ -188,11 +198,18 @@ python -m src.main
 | **Google Sheets** | Spreadsheet | Source of truth (backend) | No limit (service account) |
 
 **Sync Flow:**
-1. Check which matches need updating (based on date + state file)
-2. Try football-data.org API first
-3. If API fails and OpenAI key is configured → fall back to ChatGPT (structured prompt)
-4. Reconcile and update Google Sheets
-5. Persist state to `state/last_sync.json` for crash recovery
+1. Check for knockout bracket updates (replace TBD matches with real teams from API)
+2. Write updated schedule to Google Sheets
+3. Check which matches need score updates (based on date + state file)
+4. Try football-data.org API first
+5. If API fails and OpenAI key is configured → fall back to ChatGPT (structured prompt)
+6. Reconcile and update Google Sheets (schedule + leaderboard with elimination formatting)
+7. Persist state to `state/last_sync.json` for crash recovery
+
+**Adaptive Sync Intervals:**
+- **Regular mode** — Every 60 minutes (configurable via `SYNC_INTERVAL_MINUTES`)
+- **Live match mode** — Every 2 minutes when matches are in play (configurable via `SYNC_LIVE_INTERVAL_SECONDS`)
+- Automatically switches between modes based on live match detection
 
 ---
 
@@ -223,6 +240,27 @@ Results are logged to the **Validation Log** tab in Google Sheets with:
 
 ---
 
+## Knockout Stage & Elimination Tracking
+
+The system fully manages the progression from group stage through to the final:
+
+**Knockout Bracket Updates:**
+- On each sync, fetches all matches from the football-data.org API
+- Automatically replaces TBD placeholder matches with real team assignments
+- Works for all rounds: Round of 32 → Round of 16 → Quarter Finals → Semi Finals → Final
+
+**Eliminated Team Detection:**
+A team is marked as eliminated (strikethrough in Google Sheets) when:
+1. **Group stage elimination** — All group matches finished AND the team doesn't appear in any knockout match
+2. **Knockout loss** — Team loses any knockout match (regular time, extra time, or penalties)
+
+**Leaderboard Impact:**
+- Eliminated teams get gray strikethrough formatting in the Google Sheets leaderboard
+- Eliminated teams are sorted to the bottom of each player's team list
+- Active teams are shown first, sorted by points descending
+
+---
+
 ## Deployment (Render / Heroku)
 
 ### Render (Recommended)
@@ -235,8 +273,8 @@ Results are logged to the **Validation Log** tab in Google Sheets with:
    GOOGLE_SHEETS_CREDENTIALS_JSON={"type":"service_account",...}
    FOOTBALL_API_KEY=your_key
    OPENAI_API_KEY=sk-...  # Optional: for LLM validation
-   SYNC_HOUR=6
-   SYNC_MINUTE=0
+   SYNC_INTERVAL_MINUTES=60  # Optional: sync every 60 min (default)
+   SYNC_LIVE_INTERVAL_SECONDS=120  # Optional: 2 min during live matches
    DASHBOARD_URL=https://your-app-name.onrender.com  # Optional: for share messages
    SYNC_COOLDOWN_SECONDS=600  # Optional: 10 min cooldown (default)
    ```
@@ -260,12 +298,14 @@ Same process as Render. Set environment variables in Heroku config vars.
 - Contains: last sync timestamp, list of scored match IDs
 - On restart, app checks this file to avoid re-scoring matches
 - **Idempotent:** Running sync multiple times won't duplicate points
+- **Knockout bracket**: Re-fetches and updates TBD matches on every restart
 
 ### Graceful Degradation
 1. **API unavailable** → Falls back to ChatGPT
 2. **ChatGPT fails** → Logs error, retries next cycle
 3. **Sheets write fails** → Logs error, state not updated (safe to retry)
-4. **Invalid config** → Logs warnings but starts anyway (some features disabled)
+4. **Knockout bracket update fails** → Continues with existing schedule
+5. **Invalid config** → Logs warnings but starts anyway (some features disabled)
 
 ### Google Sheets is Standalone
 Anyone can open the spreadsheet and see current standings, even if the Python app is down.
@@ -292,6 +332,7 @@ src/
 │   └── calculator.py    # Apply rules to matches
 ├── data_sources/        # External data fetching
 │   ├── football_api.py  # football-data.org client
+│   ├── football_api_stub.py  # Stubbed API for demo mode
 │   └── llm_fallback.py  # ChatGPT fallback client
 ├── sheets/              # Google Sheets read/write per tab
 │   ├── client.py        # gspread wrapper
@@ -301,9 +342,9 @@ src/
 │   ├── scoring_rules.py # Scoring Rules tab
 │   └── formatting.py    # Cell styling utilities
 ├── sync/                # Scheduler + state management
-│   ├── scheduler.py     # APScheduler wrapper
+│   ├── scheduler.py     # APScheduler with adaptive intervals (regular + live mode)
 │   ├── state_manager.py # Persist last sync to JSON
-│   └── recovery.py      # Determine which matches to update
+│   └── recovery.py      # Match reconciliation + knockout bracket updates
 └── utils/               # Shared utilities
     ├── logger.py        # Colored console logging
     ├── retry.py         # Exponential backoff decorator
@@ -318,6 +359,7 @@ templates/
 
 tests/
 ├── test_scoring.py      # Scoring calculator tests
+├── test_football_api.py # Football API client tests
 ├── test_sheets_client.py # Google Sheets integration tests
 ├── test_sync.py         # Sync logic tests
 ├── test_recovery.py     # Crash recovery tests
@@ -338,14 +380,15 @@ tests/
 | `FOOTBALL_API_KEY` | ✅ Yes | — | football-data.org API key |
 | `OPENAI_API_KEY` | ⚠️ Optional | — | OpenAI API key for LLM validation & fallback |
 | `OPENAI_MODEL` | No | `gpt-4o-mini` | ChatGPT model to use |
-| `SYNC_HOUR` | No | `6` | Daily sync time (0-23) |
-| `SYNC_MINUTE` | No | `0` | Daily sync minute (0-59) |
+| `SYNC_INTERVAL_MINUTES` | No | `60` | Regular sync interval (minutes) |
+| `SYNC_LIVE_INTERVAL_SECONDS` | No | `120` | Aggressive sync interval during live matches (seconds) |
 | `SYNC_TIMEZONE` | No | `Asia/Kolkata` | Timezone for scheduler |
+| `SYNC_COOLDOWN_SECONDS` | No | `600` | Cooldown between manual sync/validate triggers |
 | `STATE_FILE` | No | `state/last_sync.json` | Path to state file |
 | `PORT` | No | `8000` | Web server port |
 | `LOG_LEVEL` | No | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 | `DASHBOARD_URL` | No | — | URL for share messages (e.g., your deployed site) |
-| `SYNC_COOLDOWN_SECONDS` | No | `600` | Cooldown (seconds) between manual sync/validate (10 min default) |
+| `DEMO_GOOGLE_SHEETS_ID` | No | — | Separate sheet ID for demo mode (optional) |
 
 *Either `_JSON` or `_FILE` must be set for Google Sheets credentials.
 
@@ -403,6 +446,14 @@ lsof -ti:8000 | xargs kill -9  # Kill process on port 8000
 
 ## Roadmap / Future Enhancements
 
+- [x] Live match tracking with minute display
+- [x] Adaptive sync intervals (aggressive during live matches)
+- [x] Knockout bracket auto-population from API
+- [x] Eliminated team strikethrough (group stage + all knockout rounds)
+- [x] Auto-refresh dashboard (60s polling)
+- [x] Paginated match results and upcoming matches
+- [x] Score worm chart for point progression
+- [x] Kickoff times and venue display
 - [ ] Telegram bot for score notifications
 - [ ] Mobile-responsive improvements
 - [ ] Historical match replays in dashboard
