@@ -14,10 +14,101 @@ import logging
 from datetime import date, datetime
 from typing import Optional
 
-from src.models.match import Match, MatchStatus
+from src.models.match import Match, MatchStage, MatchStatus
 from src.sync.state_manager import StateManager
 
 logger = logging.getLogger(__name__)
+
+
+def update_knockout_bracket(
+    sheet_matches: list[Match], api_matches: list[Match]
+) -> list[Match]:
+    """
+    Replace TBD knockout placeholder matches with real matches from the API.
+
+    When the knockout bracket is determined (teams assigned), the API returns
+    matches with real team names. This function replaces our TBD placeholders
+    with those real matches, preserving group stage matches and any knockout
+    matches already populated.
+
+    Args:
+        sheet_matches: Current schedule (may have TBD knockout placeholders)
+        api_matches: Latest matches from the API (with real team names)
+
+    Returns:
+        Updated match list with TBD placeholders replaced where possible
+    """
+    # Separate sheet matches into group stage and knockout
+    group_matches = [m for m in sheet_matches if m.stage == MatchStage.GROUP]
+    knockout_sheet = [m for m in sheet_matches if m.stage != MatchStage.GROUP]
+
+    # Identify TBD and non-TBD knockout matches in our sheet
+    tbd_by_stage: dict[MatchStage, list[Match]] = {}
+    real_knockout_sheet: list[Match] = []
+
+    for m in knockout_sheet:
+        if "TBD" in m.home_team or "TBD" in m.away_team:
+            tbd_by_stage.setdefault(m.stage, []).append(m)
+        else:
+            real_knockout_sheet.append(m)
+
+    # Get real knockout matches from the API (non-TBD)
+    api_knockout = [
+        m for m in api_matches
+        if m.stage != MatchStage.GROUP
+        and "TBD" not in m.home_team
+        and "TBD" not in m.away_team
+    ]
+
+    # Build a set of keys already in our sheet (non-TBD knockout matches)
+    existing_keys = {_match_key(m) for m in real_knockout_sheet}
+
+    # For each stage, replace TBD placeholders with new API matches
+    replacements_made = 0
+    for stage, tbd_matches in tbd_by_stage.items():
+        # Find API matches for this stage that we don't already have
+        new_api_for_stage = [
+            m for m in api_knockout
+            if m.stage == stage and _match_key(m) not in existing_keys
+        ]
+
+        if not new_api_for_stage:
+            continue
+
+        # Sort both by date to align them positionally
+        tbd_matches.sort(key=lambda m: m.match_date)
+        new_api_for_stage.sort(key=lambda m: m.match_date)
+
+        # Replace TBD matches with API matches (up to how many we have)
+        for i, api_match in enumerate(new_api_for_stage):
+            if i >= len(tbd_matches):
+                # More API matches than TBD slots — add them
+                real_knockout_sheet.append(api_match)
+                existing_keys.add(_match_key(api_match))
+                replacements_made += 1
+            else:
+                # Replace the TBD placeholder
+                real_knockout_sheet.append(api_match)
+                existing_keys.add(_match_key(api_match))
+                tbd_matches[i] = None  # Mark as replaced
+                replacements_made += 1
+
+        # Keep any un-replaced TBD matches (still waiting for those matchups)
+        for m in tbd_matches:
+            if m is not None:
+                real_knockout_sheet.append(m)
+
+    if replacements_made:
+        logger.info(
+            f"Knockout bracket: replaced {replacements_made} TBD matches with real teams"
+        )
+    else:
+        logger.debug("Knockout bracket: no new matches to fill in")
+
+    # Recombine and sort
+    all_matches = group_matches + real_knockout_sheet
+    all_matches.sort(key=lambda m: m.match_date)
+    return all_matches
 
 
 def get_matches_needing_update(

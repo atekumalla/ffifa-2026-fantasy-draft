@@ -105,9 +105,10 @@ def _get_group_stage_eliminated(matches: list[Match]) -> set[str]:
 
 
 def _has_knockout_started(matches: list[Match]) -> bool:
-    """Check if at least one knockout match has been played."""
+    """Check if knockouts have started — either played or scheduled with real teams."""
     return any(
-        match.stage.is_knockout and match.is_played
+        match.stage.is_knockout
+        and (match.is_played or ("TBD" not in match.home_team and "TBD" not in match.away_team))
         for match in matches
     )
 

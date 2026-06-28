@@ -609,7 +609,7 @@ def _do_sync(state: dict):
     """Execute a full sync cycle (production mode only)."""
     from src.sheets.schedule import write_schedule
     from src.sheets.scores import write_leaderboard
-    from src.sync.recovery import get_matches_needing_update, reconcile_matches
+    from src.sync.recovery import get_matches_needing_update, reconcile_matches, update_knockout_bracket
 
     matches = state["matches"]
     state_mgr = state["state_manager"]
@@ -619,10 +619,29 @@ def _do_sync(state: dict):
     players = state["players"]
     calculator = state["calculator"]
 
+    # --- Update knockout bracket (replace TBD with real teams) ---
+    try:
+        api_all = football_api.fetch_all_matches()
+        updated_matches = update_knockout_bracket(matches, api_all)
+        if len(updated_matches) != len(matches) or any(
+            a.home_team != b.home_team or a.away_team != b.away_team
+            for a, b in zip(updated_matches, matches)
+        ):
+            state["matches"] = updated_matches
+            matches = updated_matches
+            write_schedule(sheets_client, matches)
+            logger.info("Knockout bracket updated in sheet")
+    except Exception as e:
+        logger.warning(f"Failed to update knockout bracket: {e}")
+
     # Determine what needs updating
     matches_to_update = get_matches_needing_update(matches, state_mgr)
     if not matches_to_update:
-        logger.info("No matches need updating")
+        logger.info("No matches need updating — refreshing leaderboard only")
+        try:
+            write_leaderboard(sheets_client, players, state["matches"], calculator)
+        except Exception as e:
+            logger.error(f"Failed to refresh leaderboard: {e}")
         state_mgr.mark_synced()
         return
 
