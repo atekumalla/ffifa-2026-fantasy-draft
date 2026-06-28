@@ -58,6 +58,7 @@ table{border-collapse:collapse;width:100%}
 .kpi-score{font-family:var(--font-display);font-size:var(--text-2xl);font-weight:800;line-height:1;margin:var(--space-2) 0;font-variant-numeric:tabular-nums}
 .kpi-teams{display:flex;flex-direction:column;gap:3px;margin-top:var(--space-3);padding-top:var(--space-3);border-top:1px solid var(--color-divider)}
 .team-chip{font-size:var(--text-xs);background:var(--color-surface-offset);padding:2px var(--space-2);border-radius:var(--radius-sm);white-space:nowrap}
+.team-chip.eliminated{text-decoration:line-through;opacity:.55;color:var(--color-text-muted)}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6)}
 .card{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-5);box-shadow:var(--shadow-sm)}
 .section-title{font-family:var(--font-display);font-size:var(--text-lg);font-weight:700;margin-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-2)}
@@ -338,7 +339,8 @@ function renderDashboard(data) {
   leaderboard.forEach(function(p, i) {
     var color = PLAYER_COLORS[i] || PLAYER_COLORS[3];
     var teamsHtml = p.teams.map(function(t) {
-      return '<span class="team-chip">' + flag(t.team) + ' ' + t.team + ' (' + t.points + ')</span>';
+      var elimClass = t.eliminated ? ' eliminated' : '';
+      return '<span class="team-chip' + elimClass + '">' + flag(t.team) + ' ' + t.team + ' (' + t.points + ')</span>';
     }).join('');
     kpiGrid.innerHTML += '<div class="kpi-card"><div class="kpi-header"><span class="kpi-rank ' + (RANK_CLASSES[i] || 'rank-4') + '">' + (RANK_LABELS[i] || (i+1)+'th') + '</span><div class="kpi-avatar" style="background:' + color + '22;color:' + color + '">' + getPlayerInitials(p.name) + '</div></div><div class="kpi-player-name">' + p.name + '</div><div class="kpi-score" style="color:' + color + '">' + p.total_points + '</div><div class="kpi-teams">' + teamsHtml + '</div></div>';
   });

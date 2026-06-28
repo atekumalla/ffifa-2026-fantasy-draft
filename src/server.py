@@ -257,14 +257,24 @@ async def get_status():
         for team, p in pts.items():
             team_points[team] = team_points.get(team, 0.0) + p
 
+    # Determine eliminated teams for UI display
+    from src.sheets.scores import get_eliminated_teams, _has_knockout_started
+    eliminated_teams = set()
+    if _has_knockout_started(matches):
+        eliminated_teams = get_eliminated_teams(matches)
+
     for player in players:
         total = sum(round(team_points.get(_DRAFT_TEAM_ALIASES.get(t, t), 0.0), 2) for t in player.teams)
         team_breakdown = [
-            {"team": t, "points": round(team_points.get(_DRAFT_TEAM_ALIASES.get(t, t), 0.0), 2)}
+            {
+                "team": t,
+                "points": round(team_points.get(_DRAFT_TEAM_ALIASES.get(t, t), 0.0), 2),
+                "eliminated": _DRAFT_TEAM_ALIASES.get(t, t) in eliminated_teams,
+            }
             for t in player.teams
         ]
-        # Sort teams by points descending (highest scoring teams first)
-        team_breakdown.sort(key=lambda x: x["points"], reverse=True)
+        # Sort: active teams by points desc, then eliminated teams by points desc
+        team_breakdown.sort(key=lambda x: (x["eliminated"], -x["points"]))
         leaderboard.append({
             "name": player.name,
             "total_points": round(total, 2),

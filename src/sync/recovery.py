@@ -73,6 +73,8 @@ def update_knockout_bracket(
         ]
 
         if not new_api_for_stage:
+            # No API matches for this stage yet — keep all TBD placeholders
+            real_knockout_sheet.extend(tbd_matches)
             continue
 
         # Sort both by date to align them positionally
