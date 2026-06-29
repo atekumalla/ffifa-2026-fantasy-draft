@@ -80,7 +80,12 @@ class Match(BaseModel):
 
     @property
     def result_for_team(self) -> dict[str, str]:
-        """Returns 'win', 'draw', or 'loss' for each team."""
+        """Returns 'win', 'draw', or 'loss' for each team.
+        
+        In knockout matches, there's always a winner — if regular/extra time
+        is tied, penalties determine who wins (3 pts) and who loses (0 pts).
+        Draws only exist in the group stage.
+        """
         if not self.is_live_or_finished:
             return {}
         hg, ag = self.home_goals_regular, self.away_goals_regular
@@ -89,6 +94,18 @@ class Match(BaseModel):
         elif ag > hg:
             return {self.home_team: "loss", self.away_team: "win"}
         else:
+            # Regular/extra time is level
+            if self.stage.is_knockout:
+                # Knockout: penalties determine the winner
+                hp = self.home_penalties or 0
+                ap = self.away_penalties or 0
+                if hp > ap:
+                    return {self.home_team: "win", self.away_team: "loss"}
+                elif ap > hp:
+                    return {self.home_team: "loss", self.away_team: "win"}
+                # Penalties not yet decided (match still in progress or data missing)
+                return {self.home_team: "draw", self.away_team: "draw"}
+            # Group stage: a draw is a draw
             return {self.home_team: "draw", self.away_team: "draw"}
 
     @property

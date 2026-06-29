@@ -175,6 +175,9 @@ class FootballDataAPI:
         score = m.get("score", {})
         full_time = score.get("fullTime", {})
         penalties = score.get("penalties", {})
+        duration = score.get("duration", "")
+        regular_time = score.get("regularTime", {})
+        extra_time = score.get("extraTime", {})
 
         # Parse date
         utc_date = m.get("utcDate", "")
@@ -216,6 +219,29 @@ class FootballDataAPI:
         # Parse venue (only available from individual match endpoint)
         venue = m.get("venue")
 
+        # Determine regular-time goals (excluding penalty shootout goals).
+        # The football-data.org API v4.1 'fullTime' field may include penalty
+        # goals in the aggregate for PENALTY_SHOOTOUT matches. We need to
+        # extract only the goals scored during regular/extra time.
+        home_goals, away_goals = self._extract_regular_time_goals(
+            full_time, penalties, regular_time, extra_time, duration
+        )
+
+        # Extract penalty shootout score
+        home_pen = penalties.get("home") if penalties else None
+        away_pen = penalties.get("away") if penalties else None
+
+        # Log penalty match details for debugging
+        if duration == "PENALTY_SHOOTOUT":
+            logger.info(
+                f"Penalty match: {home_team} vs {away_team} — "
+                f"FT(raw): {full_time.get('home')}-{full_time.get('away')}, "
+                f"RegularTime: {regular_time.get('home')}-{regular_time.get('away')}, "
+                f"ExtraTime: {extra_time.get('home')}-{extra_time.get('away')}, "
+                f"Penalties: {home_pen}-{away_pen}, "
+                f"Computed regular goals: {home_goals}-{away_goals}"
+            )
+
         return Match(
             match_id=str(m.get("id", "")),
             match_date=match_date,
@@ -225,14 +251,76 @@ class FootballDataAPI:
             group=group if group else None,
             home_team=home_team,
             away_team=away_team,
-            home_goals=full_time.get("home"),
-            away_goals=full_time.get("away"),
-            home_penalties=penalties.get("home"),
-            away_penalties=penalties.get("away"),
+            home_goals=home_goals,
+            away_goals=away_goals,
+            home_penalties=home_pen,
+            away_penalties=away_pen,
             minute=m.get("minute"),
             injury_time=m.get("injuryTime"),
             status=status,
         )
+
+    def _extract_regular_time_goals(
+        self,
+        full_time: dict,
+        penalties: dict,
+        regular_time: dict,
+        extra_time: dict,
+        duration: str,
+    ) -> tuple[Optional[int], Optional[int]]:
+        """Extract only regular/extra-time goals, excluding penalty shootout goals.
+
+        The football-data.org API v4.1 may return aggregate scores (including
+        penalty goals) in the 'fullTime' field for penalty shootout matches.
+        This method uses 'regularTime' + 'extraTime' fields when available to
+        get the true pre-penalty score.
+
+        Returns:
+            Tuple of (home_goals, away_goals) for regular + extra time only.
+        """
+        if duration != "PENALTY_SHOOTOUT":
+            # Non-penalty match: fullTime is the correct score
+            return full_time.get("home"), full_time.get("away")
+
+        # Penalty shootout match — need to exclude penalty goals.
+        # Strategy 1: Use regularTime + extraTime if available
+        if regular_time and regular_time.get("home") is not None:
+            home_reg = regular_time.get("home", 0)
+            away_reg = regular_time.get("away", 0)
+            # Add extra time goals if available
+            if extra_time and extra_time.get("home") is not None:
+                home_reg += extra_time.get("home", 0)
+                away_reg += extra_time.get("away", 0)
+            return home_reg, away_reg
+
+        # Strategy 2: If fullTime appears to include penalties, subtract them
+        ft_home = full_time.get("home")
+        ft_away = full_time.get("away")
+        pen_home = penalties.get("home", 0) if penalties else 0
+        pen_away = penalties.get("away", 0) if penalties else 0
+
+        if ft_home is not None and ft_away is not None and pen_home and pen_away:
+            # Check if fullTime looks inflated (larger than what penalties-only would suggest)
+            computed_home = ft_home - pen_home
+            computed_away = ft_away - pen_away
+            # Sanity check: the regular-time score in a penalty match should be a draw
+            if computed_home >= 0 and computed_away >= 0 and computed_home == computed_away:
+                logger.info(
+                    f"Corrected penalty-inflated fullTime: {ft_home}-{ft_away} -> "
+                    f"{computed_home}-{computed_away} (subtracted penalties {pen_home}-{pen_away})"
+                )
+                return computed_home, computed_away
+
+        # Strategy 3: Fallback — if fullTime is already a draw, it's likely correct
+        if ft_home is not None and ft_away is not None and ft_home == ft_away:
+            return ft_home, ft_away
+
+        # Last resort: use fullTime as-is (may be wrong but best available)
+        logger.warning(
+            f"Could not determine regular-time score for penalty match. "
+            f"fullTime={ft_home}-{ft_away}, penalties={pen_home}-{pen_away}. Using fullTime."
+        )
+        return ft_home, ft_away
 
     def fetch_match_venue(self, match_id: str) -> str | None:
         """Fetch venue for a single match from the individual match endpoint.

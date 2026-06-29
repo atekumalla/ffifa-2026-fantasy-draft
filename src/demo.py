@@ -392,6 +392,8 @@ class DemoState:
                 "away_team": m.away_team,
                 "home_goals": m.home_goals,
                 "away_goals": m.away_goals,
+                "home_penalties": m.home_penalties,
+                "away_penalties": m.away_penalties,
                 "stage": m.stage.value,
                 "group": m.group,
                 "home_points": pts.get(m.home_team, 0),

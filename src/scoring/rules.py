@@ -4,13 +4,15 @@ Rules:
   Group Stage:
     - Win: 3 points
     - Draw: 1.5 points for each team
-    - Goal scored: 0.5 points for each goal scored
+    - Goal scored: 0.5 points per goal
 
   Knockout Rounds (Round of 32 onwards till Final):
-    - Win: 3 points
-    - Draw (after 90/120 min): 1.5 points
-    - Goal scored: 0.75 points for each goal scored
-    - Penalty shootout goals: DO NOT count
+    - Win (regular time, extra time, OR penalties): 3 points
+    - Loss: 0 points
+    - Goal scored (regular + extra time only): 0.75 points per goal
+    - Penalty shootout goals: DO NOT count (0 points)
+
+  There is NO draw in knockout rounds. The penalty winner gets full 3 win pts.
 """
 
 from __future__ import annotations
@@ -28,9 +30,9 @@ class ScoringRules:
     group_goal_scored: float = 0.5
     group_goal_conceded: float = 0.0  # No negative points
 
-    # Knockout rounds
+    # Knockout rounds (no draws — penalty winner gets win points)
     knockout_win: float = 3.0
-    knockout_draw: float = 1.5  # If match goes to penalties, both teams drew in regular time
+    knockout_draw: float = 0.0  # Not applicable: knockouts always have a winner
     knockout_goal_scored: float = 0.75
     knockout_goal_conceded: float = 0.0  # No negative points
 
@@ -44,12 +46,12 @@ class ScoringRules:
             },
             "knockout": {
                 "win": self.knockout_win,
-                "draw": self.knockout_draw,
                 "goal_scored": self.knockout_goal_scored,
                 "goal_conceded": self.knockout_goal_conceded,
             },
             "notes": [
-                "Penalty shootout goals do NOT count for scoring",
+                "Knockout rounds: penalty winner gets 3 pts (full win)",
+                "Penalty shootout goals do NOT count for goal points",
                 "Only regular time + extra time goals count",
             ],
         }

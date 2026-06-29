@@ -227,26 +227,38 @@ table{border-collapse:collapse;width:100%}
       </thead>
       <tbody>
         <tr>
-          <td><strong>Win</strong></td>
+          <td><strong>Win</strong><br><span style="font-size:var(--text-xs);color:var(--color-text-muted)">Including penalty shootout winner</span></td>
           <td style="text-align:center">3 pts</td>
           <td style="text-align:center">3 pts</td>
         </tr>
         <tr>
           <td><strong>Draw</strong></td>
           <td style="text-align:center">1.5 pts</td>
-          <td style="text-align:center">1.5 pts</td>
+          <td style="text-align:center;color:var(--color-text-muted)">N/A</td>
         </tr>
         <tr>
-          <td><strong>Goal Scored</strong></td>
+          <td><strong>Goal Scored</strong><br><span style="font-size:var(--text-xs);color:var(--color-text-muted)">Regular &amp; extra time only</span></td>
           <td style="text-align:center">0.5 pts</td>
           <td style="text-align:center">0.75 pts</td>
+        </tr>
+        <tr>
+          <td><strong>Penalty Shootout Goals</strong></td>
+          <td style="text-align:center;color:var(--color-text-muted)">&mdash;</td>
+          <td style="text-align:center;color:var(--color-error);font-weight:700">0 pts</td>
         </tr>
       </tbody>
     </table>
     <div class="rules-note">
-      <strong>⚠️ Important:</strong> Penalty shootout goals do <strong>not</strong> count towards scoring. Only goals scored during regular time and extra time are included in the point calculations.
-      <br><br>
-      <strong>✅ Note:</strong> Goals conceded no longer result in negative points.
+      <strong>⚠️ Knockout Rules:</strong><br>
+      • There is <strong>no draw</strong> in knockout rounds — there's always a winner.<br>
+      • The team that advances (even via penalties) gets the full <strong>3 win points</strong>. The losing team gets <strong>0</strong>.<br>
+      • Penalty shootout goals do <strong>NOT</strong> earn goal points — only regular &amp; extra time goals count at 0.75 pts each.<br>
+      <br>
+      <strong>📋 Example:</strong> Germany 1–1 Paraguay (pens 4–2):<br>
+      • Germany: 1 goal × 0.75 + 3 (win) = <strong>3.75 pts</strong><br>
+      • Paraguay: 1 goal × 0.75 + 0 (loss) = <strong>0.75 pts</strong><br>
+      <br>
+      <strong>✅ Note:</strong> Goals conceded do not result in negative points.
     </div>
   </div>
 </div>
@@ -433,7 +445,13 @@ function renderRecentPage() {
       liveIndicator = ' <span class="live-indicator" title="Live match in progress"><span class="live-dot"></span>' + (timeDisplay || 'LIVE') + '</span>';
     }
 
-    row += '<td class="score-cell">' + m.home_goals + ' \u2013 ' + m.away_goals + liveIndicator + '</td>';
+    // Show score with penalty info if applicable
+    var scoreDisplay = m.home_goals + ' \u2013 ' + m.away_goals;
+    if (m.home_penalties != null && m.away_penalties != null) {
+      scoreDisplay += ' <span style="font-size:var(--text-xs);color:var(--color-text-muted);font-weight:400">(pens ' + m.home_penalties + '\u2013' + m.away_penalties + ')</span>';
+    }
+
+    row += '<td class="score-cell">' + scoreDisplay + liveIndicator + '</td>';
     orderedPlayers.forEach(function(name) {
       var pp = m.player_points ? m.player_points[name] : null;
       if (pp && pp > 0) {

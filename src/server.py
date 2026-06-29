@@ -322,6 +322,8 @@ async def get_status():
             "away_team": m.away_team,
             "home_goals": m.home_goals,
             "away_goals": m.away_goals,
+            "home_penalties": m.home_penalties,
+            "away_penalties": m.away_penalties,
             "status": m.status.value,  # Include status for live indicator
             "minute": m.minute,
             "injury_time": m.injury_time,

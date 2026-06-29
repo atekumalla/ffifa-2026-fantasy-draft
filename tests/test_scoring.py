@@ -101,7 +101,7 @@ class TestKnockoutScoring:
         assert points["Team B"] == 0.0
 
     def test_knockout_draw_with_penalties(self):
-        """1-1 draw going to penalties: both get draw points, penalties don't count."""
+        """1-1 after ET, penalties 4-3: winner gets 3 (win) + 0.75, loser gets 0 + 0.75."""
         calc = ScoringCalculator()
         match = make_match(
             home_goals=1,
@@ -112,10 +112,10 @@ class TestKnockoutScoring:
         )
         points = calc.calculate_match_points(match)
 
-        # Both teams drew 1-1 in regular time
-        # Each: 1.5 (draw) + 1*0.75 = 2.25
-        assert points["Team A"] == 2.25
-        assert points["Team B"] == 2.25
+        # Home won on penalties: 3 (win) + 1*0.75 = 3.75
+        assert points["Team A"] == 3.75
+        # Away lost on penalties: 0 (loss) + 1*0.75 = 0.75
+        assert points["Team B"] == 0.75
 
     def test_knockout_goal_value_higher(self):
         """Knockout goals worth 0.75 vs group stage 0.5."""
