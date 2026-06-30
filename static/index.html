@@ -573,16 +573,51 @@ function renderWormChart(worm_data, leaderboard) {
     };
   });
   var dates = (worm_data.dates || []).map(function(d) {
-    // Parse date as local date (not UTC) to avoid timezone issues
     var parts = d.split('-');
     var dt = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   });
+
+  // Custom plugin for stage boundary vertical lines
+  var stageLines = worm_data.stage_lines || [];
+  var stageLinesPlugin = {
+    id: 'stageBoundaries',
+    afterDraw: function(chart) {
+      if (!stageLines.length) return;
+      var ctx = chart.ctx;
+      var xAxis = chart.scales.x;
+      var yAxis = chart.scales.y;
+      var lineColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+      var textColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.45)';
+      ctx.save();
+      stageLines.forEach(function(s) {
+        var x = xAxis.getPixelForValue(s.index);
+        // Draw dashed vertical line
+        ctx.beginPath();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = lineColor;
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(x, yAxis.top);
+        ctx.lineTo(x, yAxis.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Draw stage label at top
+        ctx.font = '600 10px "Barlow Condensed", sans-serif';
+        ctx.fillStyle = textColor;
+        ctx.textAlign = 'center';
+        ctx.fillText(s.label, x, yAxis.top - 4);
+      });
+      ctx.restore();
+    }
+  };
+
   wormChart = new Chart(ctx, {
     type: 'line',
     data: { labels: dates.length > 0 ? dates : ['No data'], datasets: datasets },
+    plugins: [stageLinesPlugin],
     options: {
       responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 16 } },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: true, position: 'top', labels: { font: { family: "'Barlow'" }, usePointStyle: true, pointStyle: 'line' } },

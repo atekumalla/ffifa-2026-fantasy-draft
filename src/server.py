@@ -24,7 +24,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from src.config import Config
-from src.models.match import Match, MatchStatus
+from src.models.match import Match, MatchStage, MatchStatus
 from src.models.player import DraftPlayer
 from src.scoring.calculator import ScoringCalculator
 from src.scoring.rules import DEFAULT_RULES
@@ -582,7 +582,7 @@ def _calculate_worm_data(
 
     finished = [m for m in matches if m.is_live_or_finished]
     if not finished:
-        return {"dates": [], "players": {p.name: [] for p in players}}
+        return {"dates": [], "players": {p.name: [] for p in players}, "stage_lines": []}
 
     finished.sort(key=lambda m: m.match_date)
 
@@ -611,9 +611,30 @@ def _calculate_worm_data(
         for player in players:
             player_cumulative[player.name].append(round(running_totals[player.name], 2))
 
+    # Compute stage boundary lines (first match date of each stage)
+    stage_labels = {
+        MatchStage.ROUND_OF_32: "R32",
+        MatchStage.ROUND_OF_16: "R16",
+        MatchStage.QUARTER_FINAL: "QF",
+        MatchStage.SEMI_FINAL: "SF",
+        MatchStage.THIRD_PLACE: "3rd",
+        MatchStage.FINAL: "Final",
+    }
+    stage_first_dates: dict[MatchStage, date] = {}
+    for m in finished:
+        if m.stage in stage_labels and m.stage not in stage_first_dates:
+            stage_first_dates[m.stage] = m.match_date
+
+    stage_lines = []
+    for stage, first_date in sorted(stage_first_dates.items(), key=lambda x: x[1]):
+        if first_date in all_dates:
+            idx = all_dates.index(first_date)
+            stage_lines.append({"index": idx, "label": stage_labels[stage]})
+
     return {
         "dates": [d.isoformat() for d in all_dates],
         "players": player_cumulative,
+        "stage_lines": stage_lines,
     }
 
 

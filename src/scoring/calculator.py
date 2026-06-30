@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from src.models.match import Match, MatchStage
+from src.models.match import Match, MatchStage, MatchStatus
 from src.scoring.rules import ScoringRules, DEFAULT_RULES
 
 
