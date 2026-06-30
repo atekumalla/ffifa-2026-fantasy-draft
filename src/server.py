@@ -632,6 +632,7 @@ def _do_sync(state: dict):
     calculator = state["calculator"]
 
     # --- Update knockout bracket (replace TBD with real teams) ---
+    api_all = []
     try:
         api_all = football_api.fetch_all_matches()
         updated_matches = update_knockout_bracket(matches, api_all)
@@ -645,6 +646,19 @@ def _do_sync(state: dict):
             logger.info("Knockout bracket updated in sheet")
     except Exception as e:
         logger.warning(f"Failed to update knockout bracket: {e}")
+
+    # Always reconcile with API data to correct any previously-stored bad scores
+    # (e.g. penalty-inflated fullTime values from before the parser fix)
+    if api_all:
+        reconciled = reconcile_matches(matches, api_all)
+        if any(
+            a.home_goals != b.home_goals or a.away_goals != b.away_goals
+            for a, b in zip(reconciled, matches)
+            if a.home_goals is not None
+        ):
+            logger.info("Reconciled scores with API — correcting previously stored data")
+            state["matches"] = reconciled
+            matches = reconciled
 
     # Determine what needs updating
     matches_to_update = get_matches_needing_update(matches, state_mgr)
