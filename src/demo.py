@@ -496,7 +496,7 @@ def initialize_demo_sheet(sheets_client, today: Optional[date] = None) -> DemoSt
     write_draft_picks(sheets_client, demo.players)
     
     logger.info("Writing full schedule with pre-scored matches...")
-    write_schedule(sheets_client, demo.matches)
+    write_schedule(sheets_client, demo.matches, demo.calculator)
     
     logger.info("Writing scoring rules...")
     write_scoring_rules(sheets_client)
@@ -535,7 +535,7 @@ def sync_demo_to_sheet(demo: DemoState, sheets_client) -> dict:
         logger.info(f"Demo sync: updating sheet with new result...")
         
         # Update schedule sheet with new scores
-        write_schedule(sheets_client, demo.matches)
+        write_schedule(sheets_client, demo.matches, demo.calculator)
         
         # Update leaderboard
         write_leaderboard(sheets_client, demo.players, demo.matches, demo.calculator)

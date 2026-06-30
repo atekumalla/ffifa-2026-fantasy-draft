@@ -185,7 +185,7 @@ class FantasyDraftApp:
         """Write updated data back to Google Sheets."""
         try:
             # Update schedule with scores
-            write_schedule(self.sheets_client, self.matches)
+            write_schedule(self.sheets_client, self.matches, self.calculator)
 
             # Update leaderboard
             write_leaderboard(

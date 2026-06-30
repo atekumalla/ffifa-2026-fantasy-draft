@@ -60,11 +60,23 @@ def read_schedule(client: SheetsClient) -> list[Match]:
     return matches
 
 
-def write_schedule(client: SheetsClient, matches: list[Match]):
-    """Write the full match schedule to Google Sheets."""
+def write_schedule(client: SheetsClient, matches: list[Match], calculator=None):
+    """Write the full match schedule to Google Sheets.
+    
+    Args:
+        client: Google Sheets client
+        matches: List of matches to write
+        calculator: Optional ScoringCalculator to compute points per match.
+                    If not provided, points columns are written as 0.
+    """
     rows = [HEADERS]
     for match in sorted(matches, key=lambda m: m.match_date):
-        rows.append(_match_to_row(match))
+        home_pts, away_pts = 0.0, 0.0
+        if calculator:
+            pts = calculator.calculate_match_points(match)
+            home_pts = pts.get(match.home_team, 0.0)
+            away_pts = pts.get(match.away_team, 0.0)
+        rows.append(_match_to_row(match, home_pts, away_pts))
 
     client.write_all_values(WORKSHEET_TITLE, rows)
     logger.info(f"Wrote {len(matches)} matches to '{WORKSHEET_TITLE}'")

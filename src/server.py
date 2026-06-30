@@ -642,13 +642,14 @@ def _do_sync(state: dict):
         ):
             state["matches"] = updated_matches
             matches = updated_matches
-            write_schedule(sheets_client, matches)
+            write_schedule(sheets_client, matches, calculator)
             logger.info("Knockout bracket updated in sheet")
     except Exception as e:
         logger.warning(f"Failed to update knockout bracket: {e}")
 
     # Always reconcile with API data to correct any previously-stored bad scores
     # (e.g. penalty-inflated fullTime values from before the parser fix)
+    scores_corrected = False
     if api_all:
         reconciled = reconcile_matches(matches, api_all)
         if any(
@@ -659,12 +660,15 @@ def _do_sync(state: dict):
             logger.info("Reconciled scores with API — correcting previously stored data")
             state["matches"] = reconciled
             matches = reconciled
+            scores_corrected = True
 
     # Determine what needs updating
     matches_to_update = get_matches_needing_update(matches, state_mgr)
     if not matches_to_update:
         logger.info("No matches need updating — refreshing leaderboard only")
         try:
+            if scores_corrected:
+                write_schedule(sheets_client, state["matches"], calculator)
             write_leaderboard(sheets_client, players, state["matches"], calculator)
         except Exception as e:
             logger.error(f"Failed to refresh leaderboard: {e}")
@@ -696,7 +700,7 @@ def _do_sync(state: dict):
 
         # Write to sheets
         try:
-            write_schedule(sheets_client, state["matches"])
+            write_schedule(sheets_client, state["matches"], calculator)
             write_leaderboard(sheets_client, players, state["matches"], calculator)
         except Exception as e:
             logger.error(f"Failed to write to sheets: {e}")
