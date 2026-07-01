@@ -519,6 +519,92 @@ async def trigger_validate():
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
 
+@app.get("/api/team-history/{team_name}")
+async def get_team_history(team_name: str):
+    """Get match history for a specific team."""
+    from urllib.parse import unquote
+    
+    team_name = unquote(team_name)
+    # Also check for alias
+    canonical_name = _DRAFT_TEAM_ALIASES.get(team_name, team_name)
+    
+    matches = _app_state.get("matches", [])
+    calculator = _app_state.get("calculator")
+    
+    if not calculator:
+        return {"team": team_name, "matches": [], "total_points": 0}
+    
+    # Filter matches where this team played and has finished/is live
+    team_matches = [
+        m for m in matches
+        if m.is_live_or_finished and (
+            m.home_team == team_name or m.away_team == team_name or
+            m.home_team == canonical_name or m.away_team == canonical_name
+        )
+    ]
+    
+    # Sort by date (most recent first)
+    team_matches.sort(key=lambda m: (
+        -(m.match_date.toordinal()),
+        -(m.kickoff_time.timestamp() if m.kickoff_time else 0),
+    ))
+    
+    history = []
+    total_points = 0.0
+    
+    for m in team_matches:
+        pts = calculator.calculate_match_points(m)
+        actual_team = canonical_name if canonical_name in (m.home_team, m.away_team) else team_name
+        
+        is_home = m.home_team == actual_team
+        opponent = m.away_team if is_home else m.home_team
+        team_goals = m.home_goals if is_home else m.away_goals
+        opp_goals = m.away_goals if is_home else m.home_goals
+        team_points = pts.get(actual_team, 0.0)
+        total_points += team_points
+        
+        # Determine result
+        result_map = m.result_for_team
+        result = result_map.get(actual_team, "unknown")
+        
+        # Format round/stage name
+        stage_names = {
+            "group": f"Group {m.group}" if m.group else "Group Stage",
+            "round_of_32": "Round of 32",
+            "round_of_16": "Round of 16",
+            "quarter_final": "Quarter Final",
+            "semi_final": "Semi Final",
+            "third_place": "3rd Place",
+            "final": "Final",
+        }
+        round_name = stage_names.get(m.stage.value, m.stage.value)
+        
+        # Score display
+        score = f"{team_goals} - {opp_goals}"
+        if m.home_penalties is not None and m.away_penalties is not None:
+            home_pens = m.home_penalties if is_home else m.away_penalties
+            away_pens = m.away_penalties if is_home else m.home_penalties
+            score += f" (pens {home_pens}-{away_pens})"
+        
+        history.append({
+            "match_id": m.match_id,
+            "date": m.match_date.isoformat(),
+            "round": round_name,
+            "opponent": opponent,
+            "home_away": "home" if is_home else "away",
+            "score": score,
+            "result": result,
+            "points": round(team_points, 2),
+            "status": m.status.value,
+        })
+    
+    return {
+        "team": team_name,
+        "matches": history,
+        "total_points": round(total_points, 2),
+    }
+
+
 @app.get("/api/share-text")
 async def get_share_text():
     """Generate a formatted share text for WhatsApp/clipboard."""
