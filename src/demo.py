@@ -472,6 +472,9 @@ def initialize_demo_sheet(sheets_client, today: Optional[date] = None) -> DemoSt
     - ~18 matches already scored
     - Scoring rules
     
+    If the sheet already has match data (>10 matches), it will NOT overwrite
+    the existing data. This prevents demo mode from corrupting production data.
+    
     Args:
         sheets_client: Configured SheetsClient instance
         today: Optional date for schedule generation (default: today)
@@ -479,10 +482,37 @@ def initialize_demo_sheet(sheets_client, today: Optional[date] = None) -> DemoSt
     Returns:
         DemoState instance tracking the demo data
     """
-    from src.sheets.players import write_draft_picks
-    from src.sheets.schedule import write_schedule
+    from src.sheets.players import write_draft_picks, read_draft_picks
+    from src.sheets.schedule import write_schedule, read_schedule
     from src.sheets.scoring_rules import write_scoring_rules
     from src.sheets.scores import write_leaderboard
+    
+    logger.info("=" * 60)
+    logger.info("Checking if sheet already has data...")
+    logger.info("=" * 60)
+    
+    # Check if sheet already has substantial data
+    existing_matches = []
+    existing_players = []
+    try:
+        existing_matches = read_schedule(sheets_client)
+        existing_players = read_draft_picks(sheets_client)
+    except Exception as e:
+        logger.warning(f"Could not read existing data: {e}")
+    
+    # If sheet has >10 matches and >0 players, don't overwrite
+    if len(existing_matches) > 10 and len(existing_players) > 0:
+        logger.info("=" * 60)
+        logger.info("⚠️  Sheet already has data - NOT overwriting!")
+        logger.info(f"   Found {len(existing_matches)} matches, {len(existing_players)} players")
+        logger.info("   Using existing data instead of demo seed data.")
+        logger.info("=" * 60)
+        
+        # Create DemoState from existing data instead
+        demo = DemoState(today)
+        demo.matches = existing_matches
+        demo.players = existing_players
+        return demo
     
     logger.info("=" * 60)
     logger.info("Initializing Google Sheet with demo data...")
