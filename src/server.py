@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 # Module-level state
 _app_state: dict = {}
 _demo_mode: bool = False
+_validation_report: str = ""   # last generated report text, served by /api/validate/report
 
 # Normalize draft pick team names to canonical match names
 # Draft picks may use aliases (e.g., "Czechia" vs "Czech Republic")
@@ -431,92 +432,48 @@ async def trigger_sync():
 
 @app.post("/api/validate")
 async def trigger_validate():
-    """Trigger validation. Rate limited. Works in demo mode if OpenAI is configured."""
-    # Check rate limit first
+    """Independent validation: fetch from football-data.org, compare with app state."""
+    global _validation_report
+
     allowed, wait_seconds = rate_limiter.try_call("validate")
     if not allowed:
         raise HTTPException(
             status_code=429,
             detail=f"Rate limited. Try again in {wait_seconds} seconds.",
         )
-    
-    # Demo mode with sheets: run real validation if OpenAI is available
-    if _app_state.get("demo_mode"):
-        from src.config import Config
-        
-        if not _app_state.get("use_sheets"):
-            # In-memory demo: skip validation
-            return {
-                "status": "ok",
-                "healthy": True,
-                "summary": "Demo mode (in-memory) — validation skipped",
-                "issues": [],
-                "checks_passed": 5,
-                "checks_failed": 0,
-            }
-        
-        # Demo with sheets: run validation if OpenAI is configured
-        if not Config.OPENAI_API_KEY:
-            return {
-                "status": "ok",
-                "healthy": True,
-                "summary": "Demo mode — OpenAI API not configured, structural checks only",
-                "issues": [],
-                "checks_passed": 5,
-                "checks_failed": 0,
-            }
-        
-        # Run real validation in demo mode!
-        from src.validation import run_full_validation
-        
-        try:
-            matches = _app_state.get("matches", [])
-            players = _app_state.get("players", [])
-            
-            logger.info("🎮 Demo mode: Running REAL validation with OpenAI...")
-            report = run_full_validation(
-                matches, 
-                players, 
-                use_llm=True
-            )
-            
-            return {
-                "status": "ok",
-                "healthy": report.is_healthy,
-                "summary": f"Demo validation: {report.summary()}",
-                "issues": [
-                    {"severity": i.severity, "message": i.message, "details": i.details}
-                    for i in report.issues
-                ],
-                "checks_passed": report.checks_passed,
-                "checks_failed": report.checks_failed,
-            }
-        except Exception as e:
-            logger.error(f"Demo validation failed: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
 
-    # Production mode
-    from src.config import Config
-    from src.validation import run_full_validation
+    from src.independent_validator import run_independent_validation
+
+    matches = _app_state.get("matches", [])
+    players = _app_state.get("players", [])
 
     try:
-        matches = _app_state.get("matches", [])
-        players = _app_state.get("players", [])
-        report = run_full_validation(matches, players, use_llm=bool(Config.OPENAI_API_KEY))
-        return {
-            "status": "ok",
-            "healthy": report.is_healthy,
-            "summary": report.summary(),
-            "issues": [
-                {"severity": i.severity, "message": i.message, "details": i.details}
-                for i in report.issues
-            ],
-            "checks_passed": report.checks_passed,
-            "checks_failed": report.checks_failed,
-        }
+        summary, report_text = run_independent_validation(
+            app_matches=matches,
+            app_players=players,
+        )
+        _validation_report = report_text
+        return {"status": "ok", **summary}
     except Exception as e:
-        logger.error(f"Validation failed: {e}", exc_info=True)
+        logger.error(f"Independent validation failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Validation failed: {str(e)}")
+
+
+@app.get("/api/validate/report")
+async def download_validation_report():
+    """Download the last validation report as a plain-text file."""
+    from fastapi.responses import Response
+
+    if not _validation_report:
+        raise HTTPException(
+            status_code=404,
+            detail="No report generated yet. Click Validate in the UI first.",
+        )
+    return Response(
+        content=_validation_report,
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="validation_report.txt"'},
+    )
 
 
 @app.get("/api/team-history/{team_name}")

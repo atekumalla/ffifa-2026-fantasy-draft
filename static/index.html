@@ -294,6 +294,30 @@ table{border-collapse:collapse;width:100%}
   </div>
 </div>
 
+<!-- Validation Report Modal -->
+<div class="modal-overlay" id="validateModal">
+  <div class="modal-content" style="max-width:580px;max-height:88vh;overflow-y:auto">
+    <button class="modal-close" onclick="closeValidateModal()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="modal-header">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+      <span>Scoring Validation Report</span>
+    </div>
+    <div id="validateModalContent" style="font-size:var(--text-sm)">
+      <p style="color:var(--color-text-muted);text-align:center;padding:var(--space-4)">Loading...</p>
+    </div>
+    <div id="validateModalActions" style="display:none;margin-top:1.25rem;padding-top:.875rem;border-top:1px solid var(--color-divider);display:flex;gap:.75rem;flex-wrap:wrap">
+      <a id="validateDownloadBtn" href="/api/validate/report" download="validation_report.txt"
+         class="btn btn-primary" style="flex:1;justify-content:center;min-width:160px">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download Full Report (.txt)
+      </a>
+      <button onclick="closeValidateModal()" class="btn btn-secondary" style="flex:1;justify-content:center;min-width:120px">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const PLAYER_COLORS = ['#d97706','#2563eb','#dc2626','#7c3aed'];
 const RANK_CLASSES = ['rank-1','rank-2','rank-3','rank-4'];
@@ -747,13 +771,123 @@ document.getElementById('btnSync').addEventListener('click', function() {
     .finally(function() { btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> Sync'; setTimeout(loadData, 500); });
 });
 
+document.getElementById('validateModal').addEventListener('click', function(e) {
+  if (e.target === this) closeValidateModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeValidateModal();
+});
+
+function openValidateModal() { document.getElementById('validateModal').classList.add('show'); }
+function closeValidateModal() { document.getElementById('validateModal').classList.remove('show'); }
+
+function renderValidationSummary(data) {
+  var healthy = data.healthy;
+  var statusColor  = healthy ? 'var(--color-primary)' : 'var(--color-error)';
+  var statusBg     = healthy ? 'var(--color-primary-highlight)' : 'var(--color-error-light)';
+  var statusIcon   = healthy ? '✅' : '❌';
+  var statusText   = healthy ? 'HEALTHY — all checks passed' : data.checks_failed + ' error(s) found';
+  var stageOrder   = ['group','round_of_32','round_of_16','quarter_final','semi_final','third_place','final'];
+  var stageLabel   = {group:'Group Stage',round_of_32:'Round of 32',round_of_16:'Round of 16',quarter_final:'Quarter Final',semi_final:'Semi Final',third_place:'3rd Place',final:'Final'};
+  var rankEmoji    = ['🥇','🥈','🥉','4️⃣'];
+
+  var html = '<div style="background:' + statusBg + ';border-radius:var(--radius-md);padding:.7rem 1rem;margin-bottom:1.1rem">'
+    + '<div style="font-family:var(--font-display);font-size:var(--text-base);font-weight:700;color:' + statusColor + '">' + statusIcon + ' ' + statusText + '</div>'
+    + '<div style="font-size:var(--text-xs);color:var(--color-text-muted);margin-top:.2rem">'
+    + data.checks_passed + ' passed · ' + data.checks_warned + ' warnings · ' + data.checks_failed + ' errors'
+    + ' · ' + new Date(data.generated_at).toLocaleTimeString() + '</div></div>';
+
+  // Match coverage
+  html += '<div style="font-family:var(--font-display);font-weight:700;font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-muted);margin-bottom:.4rem">📊 Match Coverage</div>'
+    + '<table style="width:100%;font-size:var(--text-sm);margin-bottom:1.1rem"><tbody>';
+  stageOrder.forEach(function(stage) {
+    var s = data.stage_breakdown[stage]; if (!s) return;
+    var total = s.with_teams + s.tbd;
+    var icon  = s.finished === total ? '✅' : (s.tbd > 0 ? '🔲' : '⏳');
+    var note  = s.tbd > 0 ? '(' + s.tbd + ' TBD)' : (s.finished < total ? '(' + s.scheduled + ' pending)' : '');
+    html += '<tr><td style="padding:.2rem 0;color:var(--color-text-muted);font-family:var(--font-display);font-weight:700;font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.04em;width:45%">'
+      + stageLabel[stage] + '</td><td style="font-variant-numeric:tabular-nums;font-weight:600">' + s.finished + '/' + total + '</td>'
+      + '<td style="font-size:var(--text-xs)">' + icon + ' ' + note + '</td></tr>';
+  });
+  html += '<tr style="border-top:1px solid var(--color-divider)">'
+    + '<td style="padding:.35rem 0;font-family:var(--font-display);font-weight:700;font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.04em">Total finished</td>'
+    + '<td style="font-variant-numeric:tabular-nums;font-weight:700">' + data.matches_finished + '/' + data.total_api_matches + '</td><td></td></tr></tbody></table>';
+
+  // Leaderboard comparison
+  html += '<div style="font-family:var(--font-display);font-weight:700;font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-muted);margin-bottom:.4rem">🏆 Leaderboard — API Calc vs App</div>'
+    + '<table style="width:100%;font-size:var(--text-sm);margin-bottom:1.1rem"><tbody>';
+  data.leaderboard.forEach(function(row, i) {
+    var icon  = row.match ? '✅' : '❌';
+    var diff  = row.diff !== null ? (row.diff >= 0 ? '+' + row.diff : '' + row.diff) : 'N/A';
+    var clr   = row.match ? 'var(--color-text-muted)' : 'var(--color-error)';
+    html += '<tr><td style="padding:.25rem 0;width:2rem">' + (rankEmoji[i] || (i+1)) + '</td>'
+      + '<td><strong>' + row.name + '</strong></td>'
+      + '<td style="font-variant-numeric:tabular-nums;font-family:var(--font-display);font-weight:700">' + row.our_calc + ' <span style="font-size:var(--text-xs);color:var(--color-text-muted)">pts</span></td>'
+      + '<td>' + icon + '</td>'
+      + '<td style="font-size:var(--text-xs);color:' + clr + '">' + (row.match ? 'match' : 'diff ' + diff) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+
+  // Tournament status pill row
+  html += '<div style="font-size:var(--text-sm);color:var(--color-text-muted);background:var(--color-surface-2);border-radius:var(--radius-md);padding:.55rem .9rem;margin-bottom:1.1rem;display:flex;gap:1rem;flex-wrap:wrap">'
+    + '<span>⚽ <strong style="color:var(--color-text)">' + data.teams_remaining + '</strong> still in</span>'
+    + '<span>❌ <strong style="color:var(--color-text)">' + data.teams_out_group + '</strong> out in groups</span>'
+    + '<span>❌ <strong style="color:var(--color-text)">' + data.teams_out_knockout + '</strong> out in knockouts</span></div>';
+
+  // Issues (errors/warnings only) — cap at 8 to keep modal readable
+  if (data.issues && data.issues.length > 0) {
+    var maxShown = 8;
+    var shown = data.issues.slice(0, maxShown);
+    var extra = data.issues.length - maxShown;
+    html += '<div style="font-family:var(--font-display);font-weight:700;font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.07em;color:var(--color-error);margin-bottom:.4rem">⚠️ Issues Found</div><div>';
+    shown.forEach(function(issue) {
+      var ic = issue.level === 'ERROR' ? '❌' : '⚠️';
+      var det = issue.detail ? ' <span style="color:var(--color-text-muted);font-size:var(--text-xs)">' + issue.detail + '</span>' : '';
+      html += '<div style="padding:.2rem 0;border-bottom:1px solid var(--color-divider)">' + ic + ' ' + issue.msg + det + '</div>';
+    });
+    if (extra > 0) {
+      html += '<div style="padding:.35rem 0;color:var(--color-text-muted);font-style:italic">… and ' + extra + ' more — download the full report for details.</div>';
+    }
+    html += '</div>';
+  }
+
+  document.getElementById('validateModalContent').innerHTML = html;
+  document.getElementById('validateModalActions').style.display = 'flex';
+}
+
 document.getElementById('btnValidate').addEventListener('click', function() {
   var btn = document.getElementById('btnValidate');
-  btn.disabled = true; btn.textContent = 'Validating...';
-  fetch('/api/validate', { method: 'POST' }).then(function(res) { return res.json().then(function(data) { return {ok: res.ok, data: data}; }); })
-    .then(function(r) { if (r.ok) { showToast(r.data.healthy ? '\u2705 All checks passed!' : '\u26A0\uFE0F Issues: ' + r.data.summary); } else { showToast('\u26A0\uFE0F ' + r.data.detail); } })
-    .catch(function() { showToast('\u274C Validation failed'); })
-    .finally(function() { btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Validate'; setTimeout(loadData, 500); });
+  btn.disabled = true;
+  btn.textContent = 'Validating…';
+
+  // Show modal immediately with a loading state
+  document.getElementById('validateModalContent').innerHTML =
+    '<div style="text-align:center;padding:2rem 1rem;color:var(--color-text-muted)">'
+    + '<div style="font-size:2rem;margin-bottom:.75rem">⏳</div>'
+    + '<div style="font-weight:600;color:var(--color-text)">Fetching from football-data.org…</div>'
+    + '<div style="font-size:var(--text-sm);margin-top:.4rem">Comparing match data with API ground truth</div></div>';
+  document.getElementById('validateModalActions').style.display = 'none';
+  openValidateModal();
+
+  fetch('/api/validate', { method: 'POST' })
+    .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+    .then(function(r) {
+      if (!r.ok) {
+        document.getElementById('validateModalContent').innerHTML =
+          '<div style="color:var(--color-error);padding:1rem">⚠️ ' + (r.data.detail || 'Validation failed') + '</div>';
+        return;
+      }
+      renderValidationSummary(r.data);
+    })
+    .catch(function() {
+      document.getElementById('validateModalContent').innerHTML =
+        '<div style="color:var(--color-error);padding:1rem">❌ Validation request failed</div>';
+    })
+    .finally(function() {
+      btn.disabled = false;
+      btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Validate';
+      setTimeout(loadData, 500);
+    });
 });
 
 document.getElementById('btnShare').addEventListener('click', function() {
