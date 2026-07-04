@@ -355,51 +355,61 @@ def get_knockout_matches() -> list[Match]:
         ))
         match_num += 1
 
-    # Quarter Finals (4 matches)
-    qf_dates = [
-        date(2026, 7, 9), date(2026, 7, 9),
-        date(2026, 7, 10), date(2026, 7, 10),
+    # Quarter Finals (4 matches) - Official FIFA 2026 venues
+    qf_matches = [
+        (date(2026, 7, 9), "SoFi Stadium, Los Angeles"),
+        (date(2026, 7, 9), "Gillette Stadium, Boston"),
+        (date(2026, 7, 10), "Arrowhead Stadium, Kansas City"),
+        (date(2026, 7, 10), "Hard Rock Stadium, Miami"),
     ]
-    for i, d in enumerate(qf_dates, start=1):
+    for i, (d, venue) in enumerate(qf_matches, start=1):
         matches.append(Match(
             match_id=f"QF_{i:02d}",
             match_date=d,
             stage=MatchStage.QUARTER_FINAL,
             home_team=f"QF Match {i} - TBD",
             away_team=f"QF Match {i} - TBD",
+            venue=venue,
             status=MatchStatus.SCHEDULED,
         ))
         match_num += 1
 
-    # Semi Finals (2 matches)
-    for i, d in enumerate([date(2026, 7, 13), date(2026, 7, 14)], start=1):
+    # Semi Finals (2 matches) - Official FIFA 2026 venues
+    sf_matches = [
+        (date(2026, 7, 13), "MetLife Stadium, New Jersey"),
+        (date(2026, 7, 14), "AT&T Stadium, Dallas"),
+    ]
+    for i, (d, venue) in enumerate(sf_matches, start=1):
         matches.append(Match(
             match_id=f"SF_{i:02d}",
             match_date=d,
             stage=MatchStage.SEMI_FINAL,
             home_team=f"SF Match {i} - TBD",
             away_team=f"SF Match {i} - TBD",
+            venue=venue,
             status=MatchStatus.SCHEDULED,
         ))
         match_num += 1
 
-    # Third Place
+    # Third Place - Official FIFA 2026 venue
     matches.append(Match(
         match_id="3RD_01",
         match_date=date(2026, 7, 18),
         stage=MatchStage.THIRD_PLACE,
         home_team="3rd Place - TBD",
         away_team="3rd Place - TBD",
+        venue="Hard Rock Stadium, Miami",
         status=MatchStatus.SCHEDULED,
     ))
 
-    # Final
+    # Final - Official FIFA 2026 venue
     matches.append(Match(
         match_id="FINAL_01",
         match_date=date(2026, 7, 19),
         stage=MatchStage.FINAL,
         home_team="Final - TBD",
         away_team="Final - TBD",
+        venue="MetLife Stadium, New Jersey",
         status=MatchStatus.SCHEDULED,
     ))
 
