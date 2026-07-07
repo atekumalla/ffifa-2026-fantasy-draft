@@ -138,6 +138,15 @@ def get_matches_needing_update(
 
         # Skip matches already marked finished with scores
         if match.status == MatchStatus.FINISHED and match.home_goals is not None:
+            # Don't mark as done if it's a knockout match that ended level with
+            # no penalty data yet — the winner hasn't been recorded.
+            if (
+                match.stage.is_knockout
+                and match.home_goals == match.away_goals
+                and match.home_penalties is None
+            ):
+                needs_update.append(match)
+                continue
             # This match has a score but wasn't in state — mark it
             state.mark_match_scored(match.match_id)
             continue

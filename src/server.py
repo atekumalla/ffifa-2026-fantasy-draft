@@ -712,12 +712,16 @@ def _do_sync(state: dict):
         logger.warning(f"Failed to update knockout bracket: {e}")
 
     # Always reconcile with API data to correct any previously-stored bad scores
-    # (e.g. penalty-inflated fullTime values from before the parser fix)
+    # (e.g. penalty-inflated fullTime values from before the parser fix, or
+    # penalty data that was null when a match was first synced as FINISHED)
     scores_corrected = False
     if api_all:
         reconciled = reconcile_matches(matches, api_all)
         if any(
-            a.home_goals != b.home_goals or a.away_goals != b.away_goals
+            a.home_goals != b.home_goals
+            or a.away_goals != b.away_goals
+            or (a.home_penalties is not None and a.home_penalties != b.home_penalties)
+            or (a.away_penalties is not None and a.away_penalties != b.away_penalties)
             for a, b in zip(reconciled, matches)
             if a.home_goals is not None
         ):

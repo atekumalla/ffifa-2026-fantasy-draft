@@ -579,6 +579,9 @@ function renderRecentPage() {
     var scoreDisplay = m.home_goals + ' \u2013 ' + m.away_goals;
     if (m.home_penalties != null && m.away_penalties != null) {
       scoreDisplay += ' <span style="font-size:var(--text-xs);color:var(--color-text-muted);font-weight:400">(pens ' + m.home_penalties + '\u2013' + m.away_penalties + ')</span>';
+    } else if (m.stage !== 'group' && m.home_goals === m.away_goals && m.status === 'finished') {
+      // Knockout match with tied score but penalty data not yet recorded
+      scoreDisplay += ' <span style="font-size:var(--text-xs);color:var(--color-gold);font-weight:600" title="Penalty shootout result pending sync">(pens \u23f3)</span>';
     }
 
     row += '<td class="score-cell">' + scoreDisplay + liveIndicator + '</td>';
