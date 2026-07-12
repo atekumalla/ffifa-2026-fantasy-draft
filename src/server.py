@@ -365,6 +365,8 @@ async def get_status():
     sync_ready, sync_wait = rate_limiter.can_call("sync"), rate_limiter.seconds_until_ready("sync")
     validate_ready, validate_wait = rate_limiter.can_call("validate"), rate_limiter.seconds_until_ready("validate")
 
+    tournament_complete = len(matches) > 0 and len(finished) == len(matches)
+
     return {
         "leaderboard": leaderboard,
         "recent_matches": recent_matches,
@@ -373,6 +375,7 @@ async def get_status():
         "last_sync": state_mgr.last_sync if state_mgr else None,
         "total_matches": len(matches),
         "matches_played": len(finished),
+        "tournament_complete": tournament_complete,
         "spreadsheet_url": f"https://docs.google.com/spreadsheets/d/{Config.GOOGLE_SHEETS_ID}",
         "sync_available": sync_ready,
         "sync_wait_seconds": sync_wait,

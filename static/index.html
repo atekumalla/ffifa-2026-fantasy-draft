@@ -318,6 +318,40 @@ table{border-collapse:collapse;width:100%}
   </div>
 </div>
 
+<!-- Champion Banner Overlay -->
+<div id="championOverlay" style="display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(8px)">
+  <div id="championBanner" style="position:relative;max-width:560px;width:92%;background:linear-gradient(145deg,#1a0a00,#3d1f00,#1a0a00);border:2px solid #f59e0b;border-radius:1.5rem;padding:2.5rem 2rem 2rem;text-align:center;box-shadow:0 0 80px rgba(245,158,11,.35),0 24px 64px rgba(0,0,0,.6);overflow:hidden;animation:championEntrance .6s cubic-bezier(.16,1,.3,1) both">
+    <!-- shimmer bar top -->
+    <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,#f59e0b,#fbbf24,#f59e0b,transparent);animation:shimmer 2.5s linear infinite"></div>
+    <!-- close button -->
+    <button onclick="closeChampionBanner()" aria-label="Close" style="position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:.5rem;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid rgba(255,255,255,.15);transition:all .15s ease" onmouseover="this.style.background='rgba(255,255,255,.2)'" onmouseout="this.style.background='rgba(255,255,255,.1)'">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <!-- confetti stars -->
+    <div style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;overflow:hidden" id="confettiLayer"></div>
+    <!-- trophy image -->
+    <div style="position:relative;z-index:1;margin-bottom:1.25rem">
+      <img src="/static/worldcup-trophy.png" alt="World Cup Trophy" style="width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 0 24px rgba(245,158,11,.7));animation:trophyPulse 2s ease-in-out infinite">
+    </div>
+    <!-- title -->
+    <div style="font-family:'Barlow Condensed',Arial Narrow,sans-serif;font-size:clamp(.75rem,.7rem + .6vw,1rem);font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:#f59e0b;margin-bottom:.5rem;position:relative;z-index:1">🏆 Pakodis League Champion 2026 🏆</div>
+    <div style="font-family:'Barlow Condensed',Arial Narrow,sans-serif;font-size:clamp(2rem,1.2rem + 3vw,3.5rem);font-weight:800;color:#fff;line-height:1.05;margin-bottom:.5rem;position:relative;z-index:1" id="championName">—</div>
+    <div style="font-size:clamp(.875rem,.8rem + .35vw,1rem);color:rgba(255,255,255,.6);margin-bottom:1.75rem;position:relative;z-index:1" id="championPts">Loading...</div>
+    <!-- leaderboard summary -->
+    <div id="championLeaderboard" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.75rem;position:relative;z-index:1"></div>
+    <div style="font-family:'Barlow Condensed',Arial Narrow,sans-serif;font-size:.85rem;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.35);position:relative;z-index:1">FIFA World Cup 2026 · Pakodis Fantasy Draft</div>
+    <!-- shimmer bar bottom -->
+    <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,transparent,#f59e0b,#fbbf24,#f59e0b,transparent);animation:shimmer 2.5s linear infinite reverse"></div>
+  </div>
+</div>
+
+<style>
+@keyframes championEntrance{from{opacity:0;transform:scale(.85) translateY(24px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes trophyPulse{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.06) rotate(2deg)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-120px) scale(.5)}}
+</style>
+
 <script>
 const PLAYER_COLORS = ['#d97706','#2563eb','#dc2626','#7c3aed'];
 const RANK_CLASSES = ['rank-1','rank-2','rank-3','rank-4'];
@@ -378,6 +412,64 @@ function closeTeamHistoryModal() {
   document.getElementById('teamHistoryModal').classList.remove('show');
 }
 
+// ── Champion Banner ──────────────────────────────────────────────────────────
+var _championShown = false;
+
+function showChampionBanner(leaderboard) {
+  if (_championShown) return; // only show once per page load
+  _championShown = true;
+
+  var winner = leaderboard[0];
+  var color = PLAYER_COLORS[0] || '#f59e0b';
+
+  // Populate winner info
+  document.getElementById('championName').textContent = winner.name;
+  var gap = leaderboard.length > 1 ? ' · ' + (winner.total_points - leaderboard[1].total_points).toFixed(2) + ' pts ahead' : '';
+  document.getElementById('championPts').textContent = winner.total_points + ' pts' + gap;
+
+  // Full leaderboard inside banner
+  var lb = document.getElementById('championLeaderboard');
+  lb.innerHTML = '';
+  leaderboard.forEach(function(p, i) {
+    var c = PLAYER_COLORS[i] || PLAYER_COLORS[3];
+    var medals = ['🥇', '🥈', '🥉', '4️⃣'];
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:.5rem;padding:.5rem .875rem;';
+    row.innerHTML = '<span style="display:flex;align-items:center;gap:.5rem;font-family:\'Barlow Condensed\',sans-serif;font-weight:700;color:#fff"><span>' + (medals[i] || (i+1)+'.') + '</span><span style="color:' + c + '">' + p.name + '</span></span>'
+      + '<span style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;color:' + c + '">' + p.total_points + ' <span style="font-size:.8em;color:rgba(255,255,255,.5);font-weight:600">pts</span></span>';
+    lb.appendChild(row);
+  });
+
+  // Spawn floating emoji confetti
+  var layer = document.getElementById('confettiLayer');
+  layer.innerHTML = '';
+  var emojis = ['⭐','✨','🎉','🏆','🎊','⚽','🌟'];
+  for (var i = 0; i < 18; i++) {
+    (function(idx) {
+      var span = document.createElement('span');
+      span.textContent = emojis[idx % emojis.length];
+      var left = Math.random() * 90 + 5;
+      var delay = Math.random() * 2.5;
+      var dur = 2.5 + Math.random() * 2;
+      span.style.cssText = 'position:absolute;bottom:0;left:' + left + '%;font-size:' + (1 + Math.random()) + 'rem;animation:floatUp ' + dur + 's ' + delay + 's ease-in infinite;pointer-events:none;user-select:none';
+      layer.appendChild(span);
+    })(i);
+  }
+
+  // Show overlay
+  var overlay = document.getElementById('championOverlay');
+  overlay.style.display = 'flex';
+}
+
+function closeChampionBanner() {
+  document.getElementById('championOverlay').style.display = 'none';
+}
+
+// Close champion overlay when clicking outside the banner
+document.getElementById('championOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeChampionBanner();
+});
+
 function renderTeamHistory(data) {
   var content = document.getElementById('teamHistoryContent');
   
@@ -422,6 +514,7 @@ document.getElementById('teamHistoryModal').addEventListener('click', function(e
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closeTeamHistoryModal();
+    closeChampionBanner();
     document.getElementById('rulesModal').classList.remove('show');
   }
 });
@@ -528,6 +621,11 @@ function renderDashboard(data) {
   renderUpcomingPage();
 
   renderWormChart(worm_data, leaderboard);
+
+  // Show champion banner if tournament is over
+  if (data.tournament_complete && leaderboard.length > 0) {
+    showChampionBanner(leaderboard);
+  }
 }
 
 function renderRecentPage() {

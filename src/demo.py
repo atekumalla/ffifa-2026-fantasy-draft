@@ -441,14 +441,17 @@ class DemoState:
         
         # Note: validation availability is determined by server.py
         # based on whether sheets and OpenAI are configured
+        total = len(self.matches)
+        tournament_complete = total > 0 and played == total
         return {
             "leaderboard": self.get_leaderboard(),
             "recent_matches": self.get_recent_matches(),
             "upcoming_matches": self.get_upcoming_matches(),
             "worm_data": self.get_worm_data(),
             "last_sync": self.last_sync,
-            "total_matches": len(self.matches),
+            "total_matches": total,
             "matches_played": played,
+            "tournament_complete": tournament_complete,
             "spreadsheet_url": "#demo-mode",
             "sync_available": True,
             "sync_wait_seconds": 0,
