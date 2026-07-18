@@ -588,28 +588,53 @@ async def get_share_text():
     # Count matches played
     played = sum(1 for m in matches if m.is_played)
 
+    # Check if tournament is complete
+    tournament_complete = len(matches) > 0 and played == len(matches)
+
     # Build share text with emojis
     rank_emojis = ["🥇", "🥈", "🥉", "4️⃣"]
-    lines = [
-        "⚽🏆 *FIFA 2026 Fantasy Draft* 🏆⚽",
-        f"📊 Standings after {played} matches:",
-        "",
-    ]
-    for i, (name, pts) in enumerate(standings):
-        emoji = rank_emojis[i] if i < len(rank_emojis) else f"{i+1}."
-        bar = "█" * max(1, int(pts / 3))  # Visual bar
-        lines.append(f"{emoji} *{name}*: {pts} pts")
+    lines = []
 
-    # Add gap info
-    if len(standings) >= 2:
-        gap = standings[0][1] - standings[1][1]
-        lines.append("")
-        lines.append(f"📈 Gap: {standings[0][0]} leads by {gap} pts")
+    if tournament_complete:
+        lines += [
+            "⚽🏆 *FIFA 2026 Fantasy Draft — FINAL RESULTS* 🏆⚽",
+            f"🎉🎊🥂 The FIFA World Cup 2026 is over after {played} matches! 🥂🎊🎉",
+            "",
+        ]
+        final_rank_labels = ["🏆 *CHAMPION", "🥈 *Runner-up", "🥉 *Bronze"]
+        for i, (name, pts) in enumerate(standings):
+            if i < 3:
+                label = final_rank_labels[i]
+                suffix = " 🎖️" if i == 0 else ""
+                lines.append(f"{label}: {name}* — {pts} pts{suffix}")
+            else:
+                emoji = f"{i+1}️⃣" if i < 10 else f"{i+1}."
+                lines.append(f"{emoji} *{name}* — {pts} pts")
+        if standings:
+            lines += ["", f"👑 Congratulations to *{standings[0][0]}*! 👑"]
+    else:
+        lines += [
+            "⚽🏆 *FIFA 2026 Fantasy Draft* 🏆⚽",
+            f"📊 Standings after {played} matches:",
+            "",
+        ]
+        for i, (name, pts) in enumerate(standings):
+            emoji = rank_emojis[i] if i < len(rank_emojis) else f"{i+1}."
+            lines.append(f"{emoji} *{name}*: {pts} pts")
+
+        # Add gap info
+        if len(standings) >= 2:
+            gap = standings[0][1] - standings[1][1]
+            lines.append("")
+            lines.append(f"📈 Gap: {standings[0][0]} leads by {gap} pts")
 
     # Add dashboard link if configured
     if Config.DASHBOARD_URL:
         lines.append("")
-        lines.append(f"🔗 _Updated live at {Config.DASHBOARD_URL}_")
+        if tournament_complete:
+            lines.append(f"🔗 _Full breakdown at {Config.DASHBOARD_URL}_")
+        else:
+            lines.append(f"🔗 _Updated live at {Config.DASHBOARD_URL}_")
 
     share_text = "\n".join(lines)
     return {"text": share_text}
