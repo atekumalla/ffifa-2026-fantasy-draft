@@ -1,0 +1,33 @@
+{
+  "_comment": "Draft configuration for a FIFA fantasy draft league. Copy this file to draft_config.json and edit for your league. The `teams` names must match the team names used in the tournament schedule (see src/seed_data.py). Use `team_aliases` to map any alternate spellings you use here to the canonical schedule names.",
+  "picks_per_player": 10,
+  "team_aliases": {
+    "Czechia": "Czech Republic",
+    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+    "Congo": "DR Congo"
+  },
+  "neutral_teams": [
+    "Serbia", "Denmark", "Chile", "Peru",
+    "Nigeria", "Cameroon", "Jamaica", "New Zealand"
+  ],
+  "players": [
+    {
+      "name": "Player One",
+      "initials": "P1",
+      "color": "#d97706",
+      "teams": [
+        "France", "Belgium", "Netherlands", "Uruguay", "Morocco",
+        "Canada", "Ivory Coast", "Iran", "Ghana", "South Africa"
+      ]
+    },
+    {
+      "name": "Player Two",
+      "initials": "P2",
+      "color": "#2563eb",
+      "teams": [
+        "Spain", "Germany", "Switzerland", "USA", "Japan",
+        "Egypt", "South Korea", "Algeria", "Scotland", "Tunisia"
+      ]
+    }
+  ]
+}

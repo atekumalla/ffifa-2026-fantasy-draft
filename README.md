@@ -78,13 +78,27 @@ cp .env.example .env
 #   - OPENAI_API_KEY (optional - for LLM validation)
 ```
 
-### 4. Seed the Google Sheet (run once)
+### 4. Configure Your Draft (players & picks)
+
+Player names, initials, colors, and their drafted teams are **not** hardcoded —
+they live in a JSON config file: **`config/draft_config.json`**.
+
+```bash
+cp config/draft_config.example.json config/draft_config.json
+# Edit config/draft_config.json with your league's players and picks
+```
+
+See [Customizing the Draft Configuration](#customizing-the-draft-configuration)
+below for the full schema. The committed default describes a 4-player × 10-team
+league, but any number of players and picks-per-player is supported.
+
+### 5. Seed the Google Sheet (run once)
 ```bash
 python -m src.seed_data
 ```
 This creates 5 tabs and pre-fills the 104-match World Cup schedule.
 
-### 5. Start the Dashboard
+### 6. Start the Dashboard
 ```bash
 python -m src.server
 ```
@@ -315,11 +329,15 @@ Anyone can open the spreadsheet and see current standings, even if the Python ap
 ## Project Structure
 
 ```
+config/
+├── draft_config.json         # Your league: players, picks, initials, colors, aliases
+└── draft_config.example.json # Template to copy for a new deployment
 src/
 ├── main.py              # CLI orchestrator (interactive mode)
 ├── server.py            # FastAPI web server (dashboard + API)
 ├── demo.py              # Demo mode with fake data generation
 ├── config.py            # Environment variable config (.env)
+├── draft_config.py      # Loads config/draft_config.json (players/picks/aliases)
 ├── seed_data.py         # One-time spreadsheet setup script
 ├── validation.py        # Integrity check system
 ├── models/              # Pydantic data models
@@ -389,8 +407,81 @@ tests/
 | `LOG_LEVEL` | No | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 | `DASHBOARD_URL` | No | — | URL for share messages (e.g., your deployed site) |
 | `DEMO_GOOGLE_SHEETS_ID` | No | — | Separate sheet ID for demo mode (optional) |
+| `DRAFT_CONFIG_FILE` | No | `config/draft_config.json` | Path to the draft config JSON (players, picks, aliases) |
+| `DEMO_INITIAL_PLAYED_MATCHES` | No | `18` | Demo: how many matches are "already played" at start |
+| `DEMO_COOLDOWN_SECONDS` | No | `5` | Demo: rate-limit cooldown between sync/validate |
+| `DEMO_SEED` | No | `2026` | Demo: RNG seed for reproducible fake results |
 
 *Either `_JSON` or `_FILE` must be set for Google Sheets credentials.
+
+---
+
+## Customizing the Draft Configuration
+
+All league-specific data (player count, picks-per-player, player names,
+initials, badge colors, drafted teams, and team-name aliases) is defined in a
+single JSON file — **no code changes required**. The default is
+`config/draft_config.json`; override the path with the `DRAFT_CONFIG_FILE`
+environment variable to run multiple leagues from one codebase.
+
+### Schema
+
+```jsonc
+{
+  // Number of teams each player drafts. Used for sheet layout and validation.
+  "picks_per_player": 10,
+
+  // Optional. Maps the spellings you use in "teams" below to the canonical
+  // team names used by the tournament schedule / football-data.org API.
+  "team_aliases": {
+    "Czechia": "Czech Republic",
+    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+    "Congo": "DR Congo"
+  },
+
+  // Optional. Undrafted teams used only to fill out the demo-mode schedule.
+  "neutral_teams": ["Serbia", "Denmark", "Chile", "Peru"],
+
+  // Required. One entry per player. Any number of players is supported.
+  "players": [
+    {
+      "name": "Prateik",          // Display name
+      "initials": "PP",           // Badge initials (auto-derived if omitted)
+      "color": "#d97706",         // Leaderboard/UI color (auto-assigned if omitted)
+      "teams": ["France", "Belgium", "..."]  // This player's drafted teams
+    }
+    // ...more players...
+  ]
+}
+```
+
+### What each field controls
+
+| Field | Controls |
+|-------|----------|
+| `players[].name` | Name shown on the leaderboard, sheets, and share text |
+| `players[].initials` | Two-letter badge next to teams in the UI |
+| `players[].color` | Player's accent color in charts, leaderboard, and badges |
+| `players[].teams` | The teams that count toward this player's score |
+| `picks_per_player` | Sheet column layout + draft-integrity validation |
+| `team_aliases` | Reconciles your team spellings with schedule/API names |
+| `neutral_teams` | Demo-only filler teams (ignored in production) |
+
+### To adapt the app for a different project / deployment
+
+1. **Copy** `config/draft_config.example.json` → `config/draft_config.json`
+   (or point `DRAFT_CONFIG_FILE` at your own file).
+2. **Edit** the `players` list — add/remove players and set their `teams`,
+   `initials`, and `color`. The app derives the player count from this list;
+   there is no hardcoded "4 players".
+3. **Set** `picks_per_player` to match how many teams each player drafts.
+4. If your team names differ from the schedule (`src/seed_data.py`), add
+   entries to `team_aliases`.
+5. **Re-seed** the sheet: `python -m src.seed_data`.
+
+> Team names and the match schedule remain defined in `src/seed_data.py`.
+> Everything about *who is playing the fantasy draft* is now driven by
+> `config/draft_config.json`.
 
 ---
 

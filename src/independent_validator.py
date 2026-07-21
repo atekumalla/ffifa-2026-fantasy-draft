@@ -45,32 +45,20 @@ EXPECTED_COUNTS = {
     "quarter_final": 4, "semi_final": 2, "third_place": 1, "final": 1,
 }
 
-# Canonical draft picks — must match what the API returns after normalisation
-DRAFT_PICKS: dict[str, list[str]] = {
-    "Prateik": [
-        "France", "Belgium", "Netherlands", "Uruguay", "Morocco",
-        "Canada", "Ivory Coast", "Iran", "Ghana", "South Africa",
-    ],
-    "Rohit": [
-        "Spain", "Germany", "Switzerland", "USA", "Japan",
-        "Egypt", "South Korea", "Algeria", "Scotland", "Tunisia",
-    ],
-    "Anup": [
-        "Portugal", "Brazil", "Mexico", "Croatia", "Ecuador",
-        "Austria", "Paraguay", "Bosnia and Herzegovina", "Saudi Arabia", "DR Congo",
-    ],
-    "Abhinav": [
-        "Argentina", "England", "Colombia", "Norway", "Turkey",
-        "Senegal", "Sweden", "Czech Republic", "Australia", "Qatar",
-    ],
-}
+# Canonical draft picks — loaded from the draft config file
+# (config/draft_config.json by default; override via DRAFT_CONFIG_FILE).
+from src.draft_config import get_team_aliases, load_draft_config
 
-# Aliases from seed_data.py that server.py normalises before storing
-_ALIASES = {
-    "Czechia":              "Czech Republic",
-    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
-    "Congo":                "DR Congo",
-}
+
+def _draft_picks() -> dict[str, list[str]]:
+    """Player → list of picked teams, from the draft config."""
+    return {p.name: list(p.teams) for p in load_draft_config().players}
+
+
+# Aliases that server.py normalises before storing
+_ALIASES = get_team_aliases()
+
+DRAFT_PICKS: dict[str, list[str]] = _draft_picks()
 
 TEAM_TO_PLAYER: dict[str, str] = {t: p for p, ts in DRAFT_PICKS.items() for t in ts}
 

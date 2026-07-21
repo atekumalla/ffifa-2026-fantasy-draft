@@ -44,7 +44,8 @@ def read_draft_picks(client: SheetsClient) -> list[DraftPlayer]:
 
 def write_draft_picks(client: SheetsClient, players: list[DraftPlayer]):
     """Write draft picks to the Google Sheet."""
-    max_teams = max((p.team_count for p in players), default=10)
+    from src.draft_config import get_picks_per_player
+    max_teams = max((p.team_count for p in players), default=get_picks_per_player())
 
     # Header row
     header = ["Player"] + [f"Team {i+1}" for i in range(max_teams)]

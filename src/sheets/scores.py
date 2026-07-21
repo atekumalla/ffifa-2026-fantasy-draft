@@ -25,11 +25,10 @@ WORKSHEET_TITLE = "Leaderboard"
 
 # Draft picks may use different names than the match schedule / API.
 # This maps draft-pick names → canonical match names so points are found.
-_TEAM_ALIASES = {
-    "Czechia": "Czech Republic",
-    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
-    "Congo": "DR Congo",
-}
+# Loaded from the draft config file (config/draft_config.json).
+from src.draft_config import get_team_aliases as _get_team_aliases
+
+_TEAM_ALIASES = _get_team_aliases()
 
 
 def get_eliminated_teams(matches: list[Match]) -> set[str]:
@@ -138,7 +137,8 @@ def write_leaderboard(
     eliminated_teams = get_eliminated_teams(matches) if knockout_started else set()
 
     # Build rows
-    max_teams = max((p.team_count for p in players), default=10)
+    from src.draft_config import get_picks_per_player
+    max_teams = max((p.team_count for p in players), default=get_picks_per_player())
     header = ["Rank", "Player", "Total Points"] + [f"Team {i+1}" for i in range(max_teams)]
     rows = [header]
 

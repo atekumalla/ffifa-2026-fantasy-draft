@@ -1,0 +1,50 @@
+{
+  "picks_per_player": 10,
+  "team_aliases": {
+    "Czechia": "Czech Republic",
+    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
+    "Congo": "DR Congo"
+  },
+  "neutral_teams": [
+    "Serbia", "Denmark", "Chile", "Peru",
+    "Nigeria", "Cameroon", "Jamaica", "New Zealand"
+  ],
+  "players": [
+    {
+      "name": "Prateik",
+      "initials": "PP",
+      "color": "#d97706",
+      "teams": [
+        "France", "Belgium", "Netherlands", "Uruguay", "Morocco",
+        "Canada", "Ivory Coast", "Iran", "Ghana", "South Africa"
+      ]
+    },
+    {
+      "name": "Rohit",
+      "initials": "RD",
+      "color": "#2563eb",
+      "teams": [
+        "Spain", "Germany", "Switzerland", "USA", "Japan",
+        "Egypt", "South Korea", "Algeria", "Scotland", "Tunisia"
+      ]
+    },
+    {
+      "name": "Anup",
+      "initials": "AG",
+      "color": "#dc2626",
+      "teams": [
+        "Portugal", "Brazil", "Mexico", "Croatia", "Ecuador",
+        "Austria", "Paraguay", "Bosnia & Herzegovina", "Saudi Arabia", "Congo"
+      ]
+    },
+    {
+      "name": "Abhinav",
+      "initials": "AT",
+      "color": "#7c3aed",
+      "teams": [
+        "Argentina", "England", "Colombia", "Norway", "Turkey",
+        "Senegal", "Sweden", "Czechia", "Australia", "Qatar"
+      ]
+    }
+  ]
+}

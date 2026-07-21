@@ -356,7 +356,6 @@ table{border-collapse:collapse;width:100%}
 const PLAYER_COLORS = ['#d97706','#2563eb','#dc2626','#7c3aed'];
 const RANK_CLASSES = ['rank-1','rank-2','rank-3','rank-4'];
 const RANK_LABELS = ['\u{1F947} 1st','\u{1F948} 2nd','\u{1F949} 3rd','4th'];
-
 // Upcoming matches pagination state
 const UPCOMING_PAGE_SIZE = 5;
 let upcomingPage = 0;
@@ -368,13 +367,41 @@ const RECENT_PAGE_SIZE = 10;
 let recentPage = 0;
 let allRecentMatches = [];
 
-// Player name to badge initials mapping
-const PLAYER_INITIALS = {
+// Player name to badge initials mapping.
+// Populated from /api/config at load time (falls back to these defaults).
+let PLAYER_INITIALS = {
   'Anup': 'AG',
   'Rohit': 'RD',
   'Abhinav': 'AT',
   'Prateik': 'PP'
 };
+
+// Map player name -> color, populated from /api/config. Falls back to
+// positional PLAYER_COLORS / index when a name is not found.
+let PLAYER_COLOR_BY_NAME = {};
+
+async function loadConfig() {
+  try {
+    const res = await fetch('/api/config');
+    if (!res.ok) return;
+    const cfg = await res.json();
+    if (cfg.players && cfg.players.length) {
+      PLAYER_INITIALS = {};
+      PLAYER_COLOR_BY_NAME = {};
+      const colors = [];
+      cfg.players.forEach(function(p, i) {
+        if (p.initials) PLAYER_INITIALS[p.name] = p.initials;
+        if (p.color) { PLAYER_COLOR_BY_NAME[p.name] = p.color; colors[i] = p.color; }
+      });
+      // Replace positional palette so rank-indexed lookups also use config colors
+      for (let i = 0; i < colors.length; i++) {
+        if (colors[i]) PLAYER_COLORS[i] = colors[i];
+      }
+    }
+  } catch (e) {
+    console.error('Failed to load config', e);
+  }
+}
 
 function getPlayerInitials(playerName) {
   return PLAYER_INITIALS[playerName] || playerName.substring(0, 2).toUpperCase();
@@ -1037,7 +1064,7 @@ function showToast(msg) {
   setTimeout(function() { t.classList.remove('show'); }, 3000);
 }
 
-loadData();
+loadConfig().then(loadData);
 // Auto-refresh UI every 60s to stay in sync with backend auto-sync
 setInterval(loadData, 60 * 1000);
 </script>

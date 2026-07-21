@@ -39,12 +39,11 @@ _demo_mode: bool = False
 _validation_report: str = ""   # last generated report text, served by /api/validate/report
 
 # Normalize draft pick team names to canonical match names
-# Draft picks may use aliases (e.g., "Czechia" vs "Czech Republic")
-_DRAFT_TEAM_ALIASES = {
-    "Czechia": "Czech Republic",
-    "Bosnia & Herzegovina": "Bosnia and Herzegovina",
-    "Congo": "DR Congo",
-}
+# Draft picks may use aliases (e.g., "Czechia" vs "Czech Republic").
+# Loaded from the draft config file (config/draft_config.json).
+from src.draft_config import get_team_aliases as _get_team_aliases
+
+_DRAFT_TEAM_ALIASES = _get_team_aliases()
 
 
 def _is_demo_mode() -> bool:
@@ -215,6 +214,21 @@ async def serve_dashboard():
     if not html_path.exists():
         return HTMLResponse("<h1>Dashboard not found. Run seed first.</h1>", status_code=404)
     return HTMLResponse(html_path.read_text())
+
+
+@app.get("/api/config")
+async def get_config():
+    """Expose league/player configuration to the frontend.
+
+    Returns player display metadata (name, initials, color) and picks-per-player
+    so the UI does not hardcode player names, initials, or colors.
+    """
+    from src.draft_config import get_player_meta, get_picks_per_player
+
+    return {
+        "players": get_player_meta(),
+        "picks_per_player": get_picks_per_player(),
+    }
 
 
 @app.get("/api/status")

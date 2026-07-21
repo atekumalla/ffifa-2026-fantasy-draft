@@ -427,39 +427,15 @@ def get_all_matches() -> list[Match]:
 
 def get_draft_picks() -> list[DraftPlayer]:
     """
-    Actual draft picks for the Pakodis FIFA 2026 Fantasy Draft.
-    4 players × 10 teams = 40 teams total.
+    Draft picks for the fantasy draft, loaded from the draft config file
+    (config/draft_config.json by default; override via DRAFT_CONFIG_FILE).
+
+    Edit that JSON to change players, picks-per-player, names, initials, or
+    colors without touching this code.
     """
-    return [
-        DraftPlayer(
-            name="Prateik",
-            teams=[
-                "France", "Belgium", "Netherlands", "Uruguay", "Morocco",
-                "Canada", "Ivory Coast", "Iran", "Ghana", "South Africa",
-            ],
-        ),
-        DraftPlayer(
-            name="Rohit",
-            teams=[
-                "Spain", "Germany", "Switzerland", "USA", "Japan",
-                "Egypt", "South Korea", "Algeria", "Scotland", "Tunisia",
-            ],
-        ),
-        DraftPlayer(
-            name="Anup",
-            teams=[
-                "Portugal", "Brazil", "Mexico", "Croatia", "Ecuador",
-                "Austria", "Paraguay", "Bosnia & Herzegovina", "Saudi Arabia", "Congo",
-            ],
-        ),
-        DraftPlayer(
-            name="Abhinav",
-            teams=[
-                "Argentina", "England", "Colombia", "Norway", "Turkey",
-                "Senegal", "Sweden", "Czechia", "Australia", "Qatar",
-            ],
-        ),
-    ]
+    from src.draft_config import get_players
+
+    return get_players()
 
 
 # ==============================================================================

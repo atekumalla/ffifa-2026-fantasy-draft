@@ -24,6 +24,7 @@ Usage:
 from __future__ import annotations
 
 import logging
+import os
 import random
 from datetime import date, timedelta
 from typing import Optional
@@ -38,65 +39,38 @@ logger = logging.getLogger(__name__)
 # --- DEMO CONFIGURATION ---
 
 # How many matches are "already played" when demo starts
-INITIAL_PLAYED_MATCHES = 18
+INITIAL_PLAYED_MATCHES = int(os.getenv("DEMO_INITIAL_PLAYED_MATCHES", "18"))
 
 # Rate limiter cooldown in demo (5 seconds instead of 10 min)
-DEMO_COOLDOWN_SECONDS = 5
+DEMO_COOLDOWN_SECONDS = int(os.getenv("DEMO_COOLDOWN_SECONDS", "5"))
 
 # Seed for reproducible results (but still interesting)
-DEMO_SEED = 2026
+DEMO_SEED = int(os.getenv("DEMO_SEED", "2026"))
 
 
 # --- TEAMS ---
 
-# All 48 teams: 40 drafted + 8 "neutral" (undrafted)
-NEUTRAL_TEAMS = [
-    "Serbia", "Denmark", "Chile", "Peru",
-    "Nigeria", "Cameroon", "Jamaica", "New Zealand",
-]
-
-
 def get_demo_players() -> list[DraftPlayer]:
-    """The 4 friends and their draft picks."""
-    return [
-        DraftPlayer(
-            name="Prateik",
-            teams=[
-                "France", "Belgium", "Netherlands", "Uruguay", "Morocco",
-                "Canada", "Ivory Coast", "Iran", "Ghana", "South Africa",
-            ],
-        ),
-        DraftPlayer(
-            name="Rohit",
-            teams=[
-                "Spain", "Germany", "Switzerland", "USA", "Japan",
-                "Egypt", "South Korea", "Algeria", "Scotland", "Tunisia",
-            ],
-        ),
-        DraftPlayer(
-            name="Anup",
-            teams=[
-                "Portugal", "Brazil", "Mexico", "Croatia", "Ecuador",
-                "Austria", "Paraguay", "Bosnia & Herzegovina", "Saudi Arabia", "Congo",
-            ],
-        ),
-        DraftPlayer(
-            name="Abhinav",
-            teams=[
-                "Argentina", "England", "Colombia", "Norway", "Turkey",
-                "Senegal", "Sweden", "Czechia", "Australia", "Qatar",
-            ],
-        ),
-    ]
+    """The draft players and their picks, loaded from the draft config file."""
+    from src.draft_config import get_players
+
+    return get_players()
+
+
+def _get_neutral_teams() -> list[str]:
+    """Undrafted ("neutral") teams, from the draft config file."""
+    from src.draft_config import get_neutral_teams
+
+    return get_neutral_teams()
 
 
 def _get_all_teams() -> list[str]:
-    """All 48 teams (40 drafted + 8 neutral)."""
+    """All tournament teams (drafted + neutral)."""
     players = get_demo_players()
     teams = []
     for p in players:
         teams.extend(p.teams)
-    teams.extend(NEUTRAL_TEAMS)
+    teams.extend(_get_neutral_teams())
     return teams
 
 

@@ -98,7 +98,8 @@ def format_draft_picks_tab(worksheet: gspread.Worksheet, num_players: int):
 
     # Column widths
     requests.append(_column_width_request(sheet_id, 0, 1, 120))   # Player name
-    for col in range(1, 11):
+    from src.draft_config import get_picks_per_player
+    for col in range(1, get_picks_per_player() + 1):
         requests.append(_column_width_request(sheet_id, col, col + 1, 140))  # Teams
 
     _batch_update(worksheet, requests)
@@ -151,14 +152,18 @@ def format_leaderboard_tab(worksheet: gspread.Worksheet, num_players: int):
     requests.append(_freeze_rows_request(sheet_id, 1))
 
     # Player rows with rank-based highlighting
+    # Top 3 get gold/silver/bronze; everyone else alternates white/gray.
     rank_colors = [
         COLORS["light_gold"],   # 1st place — gold
         COLORS["light_gray"],   # 2nd place — silver
         COLORS["light_red"],    # 3rd place — bronze-ish
-        COLORS["white"],        # 4th place
     ]
-    for i in range(min(num_players, 4)):
-        requests.append(_row_color_request(sheet_id, i + 1, i + 2, rank_colors[i]))
+    for i in range(num_players):
+        if i < len(rank_colors):
+            color = rank_colors[i]
+        else:
+            color = COLORS["white"] if (i - len(rank_colors)) % 2 == 0 else COLORS["light_gray"]
+        requests.append(_row_color_request(sheet_id, i + 1, i + 2, color))
 
     # Column widths
     requests.append(_column_width_request(sheet_id, 0, 1, 50))    # Rank

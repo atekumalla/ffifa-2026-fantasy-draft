@@ -63,6 +63,13 @@ class Config:
     # --- Deployment ---
     PORT: int = int(os.getenv("PORT", "8000"))
 
+    # --- Draft Configuration ---
+    # Path to the JSON file describing players, picks, initials, colors, and
+    # team aliases. Defaults to config/draft_config.json in the project root.
+    DRAFT_CONFIG_FILE: str = os.getenv(
+        "DRAFT_CONFIG_FILE", str(_project_root / "config" / "draft_config.json")
+    )
+
     # --- Demo Mode ---
     # Optional: Use a separate spreadsheet for demo mode testing
     DEMO_GOOGLE_SHEETS_ID: str = os.getenv("DEMO_GOOGLE_SHEETS_ID", "")

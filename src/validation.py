@@ -190,17 +190,23 @@ def _check_points_calculations(
 
 
 def _check_draft_picks_integrity(players: list[DraftPlayer], report: ValidationReport):
-    """Verify draft picks are valid (4 players, 10 teams each, no overlaps)."""
+    """Verify draft picks are valid (expected player/team counts, no overlaps)."""
+    from src.draft_config import load_draft_config
+
+    cfg = load_draft_config()
+    expected_players = cfg.num_players
+    expected_teams = cfg.picks_per_player
+
     issues = []
 
     # Check player count
-    if len(players) != 4:
-        issues.append(f"Expected 4 players, found {len(players)}")
+    if len(players) != expected_players:
+        issues.append(f"Expected {expected_players} players, found {len(players)}")
 
     # Check team counts
     for p in players:
-        if p.team_count != 10:
-            issues.append(f"{p.name} has {p.team_count} teams (expected 10)")
+        if p.team_count != expected_teams:
+            issues.append(f"{p.name} has {p.team_count} teams (expected {expected_teams})")
 
     # Check for duplicate team assignments
     all_teams = []
